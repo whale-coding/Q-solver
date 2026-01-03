@@ -18,10 +18,6 @@ export function EmitEvent(arg1, arg2) {
   return window['go']['main']['App']['EmitEvent'](arg1, arg2);
 }
 
-export function GetBalance(arg1) {
-  return window['go']['main']['App']['GetBalance'](arg1);
-}
-
 export function GetInitStatus() {
   return window['go']['main']['App']['GetInitStatus']();
 }
@@ -82,6 +78,10 @@ export function SyncSettingsToDefaultSettings(arg1) {
   return window['go']['main']['App']['SyncSettingsToDefaultSettings'](arg1);
 }
 
+export function TestConnection(arg1, arg2, arg3) {
+  return window['go']['main']['App']['TestConnection'](arg1, arg2, arg3);
+}
+
 export function ToggleClickThrough() {
   return window['go']['main']['App']['ToggleClickThrough']();
 }
@@ -96,8 +96,4 @@ export function TriggerSolve() {
 
 export function UpdateSettings(arg1) {
   return window['go']['main']['App']['UpdateSettings'](arg1);
-}
-
-export function ValidateAPIKey(arg1) {
-  return window['go']['main']['App']['ValidateAPIKey'](arg1);
 }

@@ -1,58 +1,22 @@
 import { ref } from 'vue'
-import { GetBalance } from '../../wailsjs/go/main/App'
 
+/**
+ * 余额管理 composable
+ * 注意：由于 OpenAI API 不提供标准的余额查询接口，这个 composable 已简化
+ * 现在主要用于在设置面板中显示临时状态
+ */
 export function useBalance(settings, statusText, statusIcon, resetStatus) {
   const balance = ref(null)
   const tempBalance = ref(null)
-  const lastRefreshTime = ref(0)
   const isRefreshingBalance = ref(false)
 
+  // 简化后不再主动查询余额
   async function fetchBalance(force = false) {
-    if (isRefreshingBalance.value || !settings.apiKey) return
-    
-    const now = Date.now()
-    if (!force && now - lastRefreshTime.value < 5000) return
-
-    isRefreshingBalance.value = true
-    try {
-      // 后端 GetBalance 改为验证 API 连通性
-      await GetBalance(settings.apiKey)
-      // 验证成功
-      statusText.value = '已连接'
-      statusIcon.value = '✅'
-      balance.value = 0 // 占位符，不再显示实际金额
-      lastRefreshTime.value = Date.now()
-      
-      // 如果之前的状态是对用户不友好的错误，重置一下
-      if (statusText.value === 'Key无效' || statusText.value === '余额不足') {
-        // 其实上面已经设置了'已连接'，这里逻辑保留或简化即可
-      }
-    } catch (e) {
-      console.error('Verify API Key error', e)
-      const errMsg = e ? e.toString().toLowerCase() : ''
-      
-      // 根据错误信息判断
-      if (errMsg.includes('401') || errMsg.includes('invalid') || errMsg.includes('incorrect')) {
-         statusText.value = 'Key无效'
-         statusIcon.value = '🚫'
-         balance.value = -1
-      } else if (errMsg.includes('quota') || errMsg.includes('余额不足')) {
-         // 虽然现在不查余额，但如果 list models 报 quota 错（极少见但可能），也归为 Key 无效或资源耗尽
-         statusText.value = '资源耗尽'
-         statusIcon.value = '💸'
-         balance.value = -1
-      } else {
-         statusText.value = '连接失败'
-         statusIcon.value = '❌'
-         balance.value = -1
-      }
-    } finally {
-      isRefreshingBalance.value = false
-    }
+    // 不再实现，连通性测试移到模型选择页面
   }
 
   function refreshBalance() {
-    fetchBalance(true)
+    // 不再实现
   }
 
   return {

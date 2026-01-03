@@ -1,0 +1,331 @@
+{
+    "version": "1.0.0",
+    "lastUpdated": "2026-01-03",
+    "models": {
+        "gemini-2.5-pro": {
+            "text": true,
+            "image": true,
+            "pdf": true,
+            "audio": false,
+            "provider": "google"
+        },
+        "gemini-2.5-flash": {
+            "text": true,
+            "image": true,
+            "pdf": true,
+            "audio": false,
+            "provider": "google"
+        },
+        "gemini-2.0-flash": {
+            "text": true,
+            "image": true,
+            "pdf": true,
+            "audio": false,
+            "provider": "google"
+        },
+        "gemini-2.0-flash-thinking-exp": {
+            "text": true,
+            "image": true,
+            "pdf": true,
+            "audio": false,
+            "provider": "google"
+        },
+        "gemini-1.5-pro": {
+            "text": true,
+            "image": true,
+            "pdf": true,
+            "audio": false,
+            "provider": "google"
+        },
+        "gemini-1.5-flash": {
+            "text": true,
+            "image": true,
+            "pdf": true,
+            "audio": false,
+            "provider": "google"
+        },
+        "gemini-exp": {
+            "text": true,
+            "image": true,
+            "pdf": true,
+            "audio": false,
+            "provider": "google"
+        },
+        "gpt-4o": {
+            "text": true,
+            "image": true,
+            "pdf": false,
+            "audio": false,
+            "provider": "openai"
+        },
+        "gpt-4o-mini": {
+            "text": true,
+            "image": true,
+            "pdf": false,
+            "audio": false,
+            "provider": "openai"
+        },
+        "gpt-4-turbo": {
+            "text": true,
+            "image": true,
+            "pdf": false,
+            "audio": false,
+            "provider": "openai"
+        },
+        "gpt-4": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "openai"
+        },
+        "gpt-3.5-turbo": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "openai"
+        },
+        "o1": {
+            "text": true,
+            "image": true,
+            "pdf": false,
+            "audio": false,
+            "provider": "openai"
+        },
+        "o1-mini": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "openai"
+        },
+        "o1-preview": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "openai"
+        },
+        "o3-mini": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "openai"
+        },
+        "claude-3-opus": {
+            "text": true,
+            "image": true,
+            "pdf": true,
+            "audio": false,
+            "provider": "anthropic"
+        },
+        "claude-3-sonnet": {
+            "text": true,
+            "image": true,
+            "pdf": true,
+            "audio": false,
+            "provider": "anthropic"
+        },
+        "claude-3-haiku": {
+            "text": true,
+            "image": true,
+            "pdf": true,
+            "audio": false,
+            "provider": "anthropic"
+        },
+        "claude-3.5-sonnet": {
+            "text": true,
+            "image": true,
+            "pdf": true,
+            "audio": false,
+            "provider": "anthropic"
+        },
+        "claude-3.5-haiku": {
+            "text": true,
+            "image": true,
+            "pdf": true,
+            "audio": false,
+            "provider": "anthropic"
+        },
+        "qwen-vl-plus": {
+            "text": true,
+            "image": true,
+            "pdf": false,
+            "audio": false,
+            "provider": "alibaba"
+        },
+        "qwen-vl-max": {
+            "text": true,
+            "image": true,
+            "pdf": false,
+            "audio": false,
+            "provider": "alibaba"
+        },
+        "qwen-turbo": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "alibaba"
+        },
+        "qwen-plus": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "alibaba"
+        },
+        "qwen-max": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "alibaba"
+        },
+        "qwen2.5": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "alibaba"
+        },
+        "deepseek-chat": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "deepseek"
+        },
+        "deepseek-coder": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "deepseek"
+        },
+        "deepseek-reasoner": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "deepseek"
+        },
+        "deepseek-v3": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "deepseek"
+        },
+        "glm-4v": {
+            "text": true,
+            "image": true,
+            "pdf": false,
+            "audio": false,
+            "provider": "zhipu"
+        },
+        "glm-4": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "zhipu"
+        },
+        "glm-4-flash": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "zhipu"
+        },
+        "moonshot-v1": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "moonshot"
+        },
+        "kimi": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "moonshot"
+        },
+        "yi-vision": {
+            "text": true,
+            "image": true,
+            "pdf": false,
+            "audio": false,
+            "provider": "01ai"
+        },
+        "yi-large": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "01ai"
+        },
+        "llama-3": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "meta"
+        },
+        "llama-3.1": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "meta"
+        },
+        "llama-3.2": {
+            "text": true,
+            "image": true,
+            "pdf": false,
+            "audio": false,
+            "provider": "meta"
+        },
+        "mistral": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "mistral"
+        },
+        "mixtral": {
+            "text": true,
+            "image": false,
+            "pdf": false,
+            "audio": false,
+            "provider": "mistral"
+        },
+        "pixtral": {
+            "text": true,
+            "image": true,
+            "pdf": false,
+            "audio": false,
+            "provider": "mistral"
+        }
+    },
+    "providerPatterns": {
+        "gemini": "google",
+        "gpt": "openai",
+        "o1": "openai",
+        "o3": "openai",
+        "claude": "anthropic",
+        "qwen": "alibaba",
+        "deepseek": "deepseek",
+        "glm": "zhipu",
+        "moonshot": "moonshot",
+        "kimi": "moonshot",
+        "yi-": "01ai",
+        "llama": "meta",
+        "mistral": "mistral",
+        "mixtral": "mistral",
+        "pixtral": "mistral"
+    }
+}

@@ -43,11 +43,14 @@
                             <span>PDF 预览</span>
                             <div class="pdf-pane-actions unified-actions">
                                 <button class="btn-primary parse-btn" @click="$emit('parse-resume')"
-                                    :disabled="isParsing">
+                                    :disabled="isParsing || !canAIParse" :title="canAIParse ? '' : '当前模型不支持 PDF/图片解析'">
                                     <span class="icon" v-if="!isParsing">✨</span>
                                     <span class="icon spin" v-else>⏳</span>
-                                    {{ isParsing ? '解析中...' : 'AI 解析为 Markdown' }}
+                                    {{ isParsing ? '解析中...' : (canAIParse ? 'AI 解析为 Markdown' : '模型不支持') }}
                                 </button>
+                                <span v-if="!canAIParse" class="vision-warning" title="当前模型不支持视觉功能，请切换模型或手动输入">
+                                    ⚠️
+                                </span>
                                 <!-- <button class="pdf-btn collapse-btn"
                                     @click="pdfControlsCollapsed = !pdfControlsCollapsed" title="展开/折叠PDF控件">
                                     <span v-if="pdfControlsCollapsed">▶</span>
@@ -88,7 +91,7 @@
                             <div class="right-controls">
                                 <span class="action-text" @click="toggleEdit" v-if="renderedContent || localContent">{{
                                     isEditing ? '预览'
-                                    : '编辑' }}</span>
+                                        : '编辑' }}</span>
                                 <span class="separator" v-if="renderedContent || localContent">|</span>
                                 <span class="hint-text" @click="toggleFlip">&lt; 点击切换到 PDF</span>
                             </div>
@@ -128,6 +131,7 @@ import { computed, ref, watch, onMounted, nextTick } from 'vue';
 import { marked } from 'marked';
 import { GetResumePDF } from '../../wailsjs/go/main/App';
 import * as pdfjsLib from 'pdfjs-dist';
+import { supportsVision } from '../utils/modelCapabilities';
 
 // 设置 PDF.js worker
 // 使用 new URL 方式在 Vite 中引入 worker
@@ -152,8 +156,15 @@ const props = defineProps({
     useMarkdownResume: {
         type: Boolean,
         default: false
+    },
+    currentModel: {
+        type: String,
+        default: ''
     }
 });
+
+// 检查当前模型是否支持视觉功能
+const canAIParse = computed(() => supportsVision(props.currentModel));
 
 const emit = defineEmits(['select-resume', 'clear-resume', 'parse-resume', 'update:rawContent', 'update:useMarkdownResume']);
 
@@ -637,6 +648,24 @@ btn-danger:hover {
 .parse-btn:hover:not(:disabled) {
     background: #1890ff;
     color: #fff;
+}
+
+.vision-warning {
+    font-size: 14px;
+    cursor: help;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
 }
 
 

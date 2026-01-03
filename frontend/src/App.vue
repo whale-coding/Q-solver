@@ -101,60 +101,47 @@
               <label
                 style="font-weight: 600; color: rgba(255,255,255,0.72); font-size: 15px; margin-bottom: 8px; display: block;">API
                 Key</label>
-              <div v-if="!uiState.isEditingKey" class="input-group" style="margin-top: 0;">
-                <input type="text" :value="maskedKey" disabled
-                  style="border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.12); padding: 12px; background: rgba(60,62,68,0.92); color: #fff; font-size: 15px; width: 100%; outline: none; transition: box-shadow 0.2s, border-color 0.2s; box-shadow: none;" />
-                <button class="btn-secondary" @click="uiState.isEditingKey = true"
-                  style="margin-left: 10px; background: linear-gradient(90deg,#4CAF50,#43e97b); color: #fff; border: none; border-radius: 10px; padding: 10px 22px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(76,175,80,0.10);">更换</button>
-              </div>
-              <div v-else class="input-group" style="margin-top: 0;">
+              <div class="input-group" style="margin-top: 0;">
                 <input type="password" v-model="tempSettings.apiKey" placeholder="sk-..."
                   style="border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.12); padding: 12px; background: rgba(60,62,68,0.92); color: #fff; font-size: 15px; width: 100%; outline: none; transition: box-shadow 0.2s, border-color 0.2s; box-shadow: none;"
                   @focus="(e) => { e.target.style.boxShadow = '0 0 0 2px #4CAF50'; e.target.style.borderColor = '#4CAF50' }"
                   @blur="(e) => { e.target.style.boxShadow = 'none'; e.target.style.borderColor = 'rgba(255,255,255,0.12)' }" />
-                <button class="btn-secondary" @click="verifyKey"
-                  :disabled="uiState.isValidatingKey || !tempSettings.apiKey"
-                  style="margin-left: 10px; background: linear-gradient(90deg,#4CAF50,#43e97b); color: #fff; border: none; border-radius: 10px; padding: 10px 22px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(76,175,80,0.10);">
-                  {{ uiState.isValidatingKey ? '验证中...' : '验证' }}
-                </button>
               </div>
-              <p v-if="uiState.keyValidationError && uiState.isEditingKey" class="error-text"
-                style="color: #ff5252; margin-top: 8px; font-size: 13px;">{{ uiState.keyValidationError }}</p>
-            </div>
-
-            <div class="account-info-row" v-if="tempSettings.apiKey && uiState.isKeyValid"
-              style="margin-top: 14px; display: flex; align-items: center; gap: 16px; background: rgba(60,62,68,0.92); border-radius: 10px; padding: 12px 20px; border: 1px solid rgba(255,255,255,0.08);">
-              <span class="account-info-label" style="font-weight: 600; color: #4CAF50; font-size: 15px;">API状态</span>
-              <div class="balance-display" style="font-size: 16px; font-weight: bold; color: rgba(255,255,255,0.92);">
-                <span v-if="tempBalance === 0">✅ 验证通过</span>
-                <span v-else-if="tempBalance === -1">🚫 无效Key</span>
-                <span v-else-if="uiState.isRefreshingBalance">验证中...</span>
-                <span v-else>--</span>
-              </div>
+              <p class="hint-text"
+                style="color: rgba(255,255,255,0.38); margin-left: 0; margin-top: 8px; font-size: 13px;">请输入您的 API
+                Key，保存后将在模型页面自动获取可用模型列表。</p>
             </div>
           </div>
         </div>
 
         <div v-show="uiState.activeTab === 'model'">
           <div class="form-group">
-            <label>
-              模型选择
-              <span v-if="uiState.isLoadingModels" class="loading-text">加载中...</span>
-            </label>
-
-            <div class="custom-select" :class="{ open: uiState.isModelDropdownOpen, disabled: uiState.isLoadingModels }"
-              @click="toggleModelDropdown" ref="modelSelectRef">
-              <div class="selected-value">
-                {{ tempSettings.model || '请选择模型' }}
-                <span class="arrow">▼</span>
-              </div>
-              <div class="options-list" v-show="uiState.isModelDropdownOpen">
-                <div v-for="m in uiState.availableModels" :key="m" class="option-item"
-                  :class="{ selected: tempSettings.model === m }" @click.stop="selectModel(m)">
-                  {{ m }}
-                </div>
+            <div class="model-header">
+              <label>模型选择</label>
+              <div class="model-actions">
+                <button class="btn-icon" @click="refreshModels"
+                  :disabled="uiState.isLoadingModels || !tempSettings.apiKey" title="刷新模型列表">
+                  <span :class="{ spin: uiState.isLoadingModels }">🔄</span>
+                </button>
+                <button class="btn-icon" @click="testConnection"
+                  :disabled="uiState.isTestingConnection || !tempSettings.model" title="测试模型连通性">
+                  <span :class="{ spin: uiState.isTestingConnection }">{{ uiState.isTestingConnection ? '⏳' : '🔗'
+                  }}</span>
+                </button>
               </div>
             </div>
+            <ModelSelect v-model="tempSettings.model" :models="uiState.availableModels"
+              :loading="uiState.isLoadingModels" />
+
+            <!-- 连通性测试结果 -->
+            <div v-if="uiState.connectionStatus" class="connection-status" :class="uiState.connectionStatus.type">
+              <span class="status-icon">{{ uiState.connectionStatus.icon }}</span>
+              <span class="status-text">{{ uiState.connectionStatus.message }}</span>
+            </div>
+
+            <p v-if="!tempSettings.apiKey" class="hint-text" style="color: #ff9800; margin-top: 8px;">
+              ⚠️ 请先在账户页面填写 API Key
+            </p>
           </div>
 
           <div class="form-group">
@@ -219,7 +206,8 @@
 
         <div v-show="uiState.activeTab === 'resume'" style="height: 100%">
           <ResumeImport :resumePath="tempSettings.resumePath" :rawContent="resumeState.rawContent"
-            :isParsing="resumeState.isParsing" v-model:useMarkdownResume="tempSettings.useMarkdownResume"
+            :isParsing="resumeState.isParsing" :currentModel="tempSettings.model"
+            v-model:useMarkdownResume="tempSettings.useMarkdownResume"
             @update:rawContent="val => resumeState.rawContent = val" @select-resume="selectResume"
             @clear-resume="clearResume" @parse-resume="parseResume" />
         </div>
@@ -247,6 +235,7 @@ import ErrorView from './components/ErrorView.vue'
 import LoadingView from './components/LoadingView.vue'
 // import InitLoading from './components/InitLoading.vue'
 import TopBar from './components/TopBar.vue'
+import ModelSelect from './components/ModelSelect.vue'
 import { EventsOn, Quit } from '../wailsjs/runtime/runtime'
 import { StopRecordingKey, SelectResume, ClearResume, RestoreFocus, RemoveFocus, ParseResume, GetInitStatus } from '../wailsjs/go/main/App'
 
@@ -264,14 +253,12 @@ import './App.scoped.css'
 const uiState = reactive({
   showSettings: false,
   activeTab: 'general',
-  isEditingKey: false,
   availableModels: [],
   isLoadingModels: false,
   isModelDropdownOpen: false,
   promptTab: 'edit',
-  keyValidationError: '',
-  isKeyValid: false,
-  isValidatingKey: false,
+  isTestingConnection: false,
+  connectionStatus: null,
 })
 
 const {
@@ -288,7 +275,7 @@ const settingsCallbacks = {}
 
 const {
   settings, tempSettings, renderedPrompt, maskedKey,
-  loadSettings, verifyKey, fetchModels, saveSettings, resetTempSettings, openSettings: initSettings
+  loadSettings, refreshModels, testConnection, fetchModels, saveSettings, resetTempSettings, openSettings: initSettings
 } = useSettings(shortcuts, tempShortcuts, uiState, settingsCallbacks)
 
 const resumeState = reactive({
@@ -353,8 +340,6 @@ settingsCallbacks.updateBalanceFromTemp = () => { balance.value = tempBalance.va
 settingsCallbacks.onKeyChange = () => { tempBalance.value = null }
 settingsCallbacks.closeSettings = closeSettings
 
-const modelSelectRef = ref(null)
-
 function openSettings() {
   RestoreFocus()
   // 初始化临时设置
@@ -384,16 +369,6 @@ function closeSettings() {
   recordingText.value = ''
   // 恢复所有临时设置到原值（包括透明度）
   resetTempSettings()
-}
-
-function toggleModelDropdown() {
-  if (uiState.isLoadingModels) return
-  uiState.isModelDropdownOpen = !uiState.isModelDropdownOpen
-}
-
-function selectModel(model) {
-  tempSettings.model = model
-  uiState.isModelDropdownOpen = false
 }
 
 const solveShortcut = computed(() => shortcuts.solve?.keyName || 'F8')
@@ -638,11 +613,5 @@ onMounted(() => {
       event.preventDefault();
     }
   });
-
-  document.addEventListener('click', (e) => {
-    if (modelSelectRef.value && !modelSelectRef.value.contains(e.target)) {
-      uiState.isModelDropdownOpen = false
-    }
-  })
 })
 </script>

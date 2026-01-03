@@ -311,22 +311,14 @@ func (a *App) GetScreenshotPreview(quality int, sharpen float64, grayscale bool,
 
 // ==================== LLM 相关 ====================
 
-// GetBalance 获取账户余额
-func (a *App) GetBalance(apiKey string) (float64, error) {
+// TestConnection 测试模型连通性
+// 通过发送一个简单的消息来测试 API 是否可用
+func (a *App) TestConnection(apiKey, baseURL, model string) string {
 	ctx := a.ctx
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return a.llmService.GetBalance(ctx, apiKey)
-}
-
-// ValidateAPIKey 验证 API Key
-func (a *App) ValidateAPIKey(apiKey string) string {
-	ctx := a.ctx
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	return a.llmService.ValidateAPIKey(ctx, apiKey)
+	return a.llmService.TestConnection(ctx, apiKey, baseURL, model)
 }
 
 // GetModels 获取模型列表

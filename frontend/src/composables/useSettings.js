@@ -1,6 +1,6 @@
 import { reactive, computed, watch } from 'vue'
 import { marked } from 'marked'
-import { GetSettings, SyncSettingsToDefaultSettings, ValidateAPIKey, GetModels, GetBalance } from '../../wailsjs/go/main/App'
+import { GetSettings, SyncSettingsToDefaultSettings, GetModels, TestConnection } from '../../wailsjs/go/main/App'
 
 /**
  * 配置管理 composable
@@ -45,20 +45,14 @@ export function useSettings(shortcuts, tempShortcuts, uiState, callbacks) {
     if (app) app.style.backgroundColor = `rgba(0, 0, 0, ${opacity * 0.8})`
   })
 
-  // 监听 API Key 变化（只有真正变化时才重置验证状态）
+  // 监听 API Key 变化（只有真正变化时才重置状态）
   let lastApiKey = ''
   watch(() => tempSettings.apiKey, (newVal) => {
-    // 只有当 API Key 真正变化时才重置验证状态
+    // 只有当 API Key 真正变化时才重置状态
     if (newVal !== lastApiKey) {
       lastApiKey = newVal
-      // 如果新值等于已保存的 settings.apiKey，保持验证状态
-      if (newVal === settings.apiKey && settings.apiKey) {
-        // 不重置，保持原有验证状态
-      } else {
-        uiState.keyValidationError = ''
-        uiState.isKeyValid = false
-        if (callbacks.onKeyChange) callbacks.onKeyChange()
-      }
+      // 清空连通性测试结果
+      uiState.connectionStatus = null
     }
   })
 
@@ -143,47 +137,57 @@ export function useSettings(shortcuts, tempShortcuts, uiState, callbacks) {
   }
 
   /**
-   * 验证 API Key
+   * 刷新模型列表
    */
-  async function verifyKey() {
-    if (!tempSettings.apiKey) return false
-    uiState.isValidatingKey = true
-    uiState.keyValidationError = ''
+  async function refreshModels() {
+    if (!tempSettings.apiKey) {
+      if (callbacks.showToast) callbacks.showToast('请先填写 API Key', 'warning')
+      return
+    }
+    await fetchModels(tempSettings.apiKey)
+    if (uiState.availableModels.length > 0) {
+      if (callbacks.showToast) callbacks.showToast(`已加载 ${uiState.availableModels.length} 个模型`, 'success')
+    }
+  }
+
+  /**
+   * 测试模型连通性
+   */
+  async function testConnection() {
+    if (!tempSettings.model) {
+      if (callbacks.showToast) callbacks.showToast('请先选择模型', 'warning')
+      return
+    }
+
+    uiState.isTestingConnection = true
+    uiState.connectionStatus = null
 
     try {
-      const err = await ValidateAPIKey(tempSettings.apiKey)
-      if (err) {
-        const msg = err.toLowerCase()
-        if (msg.includes('令牌额度已用尽') || msg.includes('quota_exceeded') || msg.includes('余额不足')) {
-          uiState.keyValidationError = '当前API-KEY余额不足'
-        } else if (msg.includes('401')) {
-          uiState.keyValidationError = 'API-KEY无效'
-        } else {
-          uiState.keyValidationError = 'API-KEY验证失败，请检查您的输入或网络连接。'
+      const result = await TestConnection(tempSettings.apiKey, tempSettings.baseURL, tempSettings.model)
+      if (result === '') {
+        uiState.connectionStatus = {
+          type: 'success',
+          icon: '✅',
+          message: `模型 ${tempSettings.model} 连接成功`
         }
-        uiState.isKeyValid = false
-        return false
+        if (callbacks.showToast) callbacks.showToast('连接测试成功', 'success')
       } else {
-        if (callbacks.showToast) callbacks.showToast('验证成功', 'success')
-        uiState.isKeyValid = true
-        uiState.keyValidationError = ''
-        try {
-          const b = await GetBalance(tempSettings.apiKey)
-          if (callbacks.setTempBalance) callbacks.setTempBalance(b)
-          fetchModels(tempSettings.apiKey)
-        } catch (e) {
-          console.error('GetBalance error', e)
-          if (callbacks.setTempBalance) callbacks.setTempBalance(null)
+        uiState.connectionStatus = {
+          type: 'error',
+          icon: '❌',
+          message: result
         }
-        return true
+        if (callbacks.showToast) callbacks.showToast('连接测试失败', 'error')
       }
     } catch (e) {
-      console.error("验证异常:", e)
-      uiState.keyValidationError = '验证过程发生错误，请稍后重试。'
-      uiState.isKeyValid = false
-      return false
+      console.error('连接测试异常:', e)
+      uiState.connectionStatus = {
+        type: 'error',
+        icon: '❌',
+        message: e.message || '连接测试失败'
+      }
     } finally {
-      uiState.isValidatingKey = false
+      uiState.isTestingConnection = false
     }
   }
 
@@ -213,13 +217,6 @@ export function useSettings(shortcuts, tempShortcuts, uiState, callbacks) {
    */
   async function saveSettings() {
     try {
-      // 如果 API Key 改变了且新 Key 未验证，先验证
-      const keyChanged = tempSettings.apiKey !== settings.apiKey
-      if (keyChanged && tempSettings.apiKey && !uiState.isKeyValid) {
-        const isValid = await verifyKey()
-        if (!isValid) return
-      }
-
       // 同步快捷键
       Object.assign(shortcuts, JSON.parse(JSON.stringify(tempShortcuts)))
 
@@ -285,12 +282,12 @@ export function useSettings(shortcuts, tempShortcuts, uiState, callbacks) {
     // 更新 lastApiKey 避免触发 watch
     lastApiKey = settings.apiKey
 
-    // 如果有 API Key，标记为已验证
+    // 清空连通性状态
+    uiState.connectionStatus = null
+
+    // 如果有 API Key，自动加载模型列表
     if (settings.apiKey) {
-      uiState.isKeyValid = true
-      uiState.isEditingKey = false
-    } else {
-      uiState.isEditingKey = true
+      fetchModels(settings.apiKey)
     }
   }
 
@@ -300,7 +297,8 @@ export function useSettings(shortcuts, tempShortcuts, uiState, callbacks) {
     renderedPrompt,
     maskedKey,
     loadSettings,
-    verifyKey,
+    refreshModels,
+    testConnection,
     fetchModels,
     saveSettings,
     resetTempSettings,

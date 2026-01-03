@@ -118,16 +118,16 @@ func (p *OpenAIProvider) GenerateContentStream(ctx context.Context, history []op
 	return fullResponse.String(), nil
 }
 
-func (p *OpenAIProvider) GetBalance(ctx context.Context) (float64, error) {
-	_, err := p.client.Models.List(ctx)
-	if err != nil {
-		return 0, err
-	}
-	return 0, nil
-}
-
-func (p *OpenAIProvider) Validate(ctx context.Context) error {
-	_, err := p.client.Models.List(ctx)
+// TestChat 通过发送简单消息测试连通性
+func (p *OpenAIProvider) TestChat(ctx context.Context) error {
+	// 发送一个简单的消息测试连通性
+	_, err := p.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+		Model: p.model,
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage("hi"),
+		},
+		MaxTokens: openai.Int(1),
+	})
 	return err
 }
 

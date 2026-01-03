@@ -11,8 +11,6 @@ export function CopyCode():Promise<void>;
 
 export function EmitEvent(arg1:string,arg2:Array<any>):Promise<void>;
 
-export function GetBalance(arg1:string):Promise<number>;
-
 export function GetInitStatus():Promise<string>;
 
 export function GetModels(arg1:string):Promise<Array<string>>;
@@ -43,6 +41,8 @@ export function StopRecordingKey():Promise<void>;
 
 export function SyncSettingsToDefaultSettings(arg1:string):Promise<string>;
 
+export function TestConnection(arg1:string,arg2:string,arg3:string):Promise<string>;
+
 export function ToggleClickThrough():Promise<void>;
 
 export function ToggleVisibility():Promise<void>;
@@ -50,5 +50,3 @@ export function ToggleVisibility():Promise<void>;
 export function TriggerSolve():Promise<void>;
 
 export function UpdateSettings(arg1:string):Promise<string>;
-
-export function ValidateAPIKey(arg1:string):Promise<string>;

@@ -29,36 +29,30 @@ func (s *Service) GetProvider() Provider {
 	return s.provider
 }
 
-// GetBalance 获取当前账户余额
-func (s *Service) GetBalance(ctx context.Context, apiKey string) (float64, error) {
-	// 如果提供了临时的 apiKey，使用临时 provider
-	if apiKey != "" && apiKey != s.config.APIKey {
-		tempProvider := NewOpenAIProvider(apiKey, s.config.BaseURL, s.config.Model)
-		return tempProvider.GetBalance(ctx)
-	}
-
-	if s.provider == nil {
-		s.UpdateProvider()
-	}
-	return s.provider.GetBalance(ctx)
-}
-
-// ValidateAPIKey 验证 API Key 是否有效
-func (s *Service) ValidateAPIKey(ctx context.Context, apiKey string) string {
+// TestConnection 测试模型连通性
+// 通过发送一个简单的聊天请求来验证 API Key 和模型是否可用
+func (s *Service) TestConnection(ctx context.Context, apiKey, baseURL, model string) string {
 	if apiKey == "" {
 		return "API Key 不能为空"
 	}
+	if model == "" {
+		return "请选择模型"
+	}
 
-	// 创建一个临时的 provider，只用于验证
-	tempProvider := NewOpenAIProvider(apiKey, s.config.BaseURL, s.config.Model)
+	// 使用传入的参数创建临时 provider
+	if baseURL == "" {
+		baseURL = s.config.BaseURL
+	}
+	tempProvider := NewOpenAIProvider(apiKey, baseURL, model)
 
-	// 设置一个超时 context
-	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	// 设置超时
+	timeoutCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
-	err := tempProvider.Validate(timeoutCtx)
+	// 发送一个简单的测试消息
+	err := tempProvider.TestChat(timeoutCtx)
 	if err != nil {
-		return fmt.Sprintf("验证失败: %v", err)
+		return err.Error()
 	}
 
 	return "" // 成功返回空字符串
