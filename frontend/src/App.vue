@@ -65,59 +65,8 @@
       </div>
       <div class="modal-body">
         <div v-show="uiState.activeTab === 'account'">
-          <div class="account-card"
-            style="background: rgba(30,32,36,0.92); border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.12); padding: 32px 28px; border: 1px solid rgba(255,255,255,0.04);">
-            <div class="account-header" style="display: flex; align-items: center; gap: 16px; margin-bottom: 28px;">
-              <span class="account-icon"
-                style="font-size: 32px; background: rgba(255,255,255,0.08); border-radius: 50%; padding: 10px; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.18);">🔑</span>
-              <div>
-                <div class="account-title"
-                  style="font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.92); letter-spacing: 1px;">提供商配置
-                </div>
-                <div class="account-desc" style="font-size: 14px; color: rgba(255,255,255,0.48); margin-top: 4px;">配置
-                  模型提供商、API Key 与代理地址</div>
-              </div>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 22px;">
-              <label
-                style="font-weight: 600; color: rgba(255,255,255,0.72); font-size: 15px; margin-bottom: 8px; display: block;">提供商
-                (Provider)</label>
-              <ProviderSelect v-model="tempSettings.provider" />
-            </div>
-
-
-
-            <div class="form-group" style="margin-bottom: 22px;" v-if="tempSettings.provider === 'custom'">
-              <label
-                style="font-weight: 600; color: rgba(255,255,255,0.72); font-size: 15px; margin-bottom: 8px; display: block;">Base
-                URL</label>
-              <div class="input-group" style="margin-top: 0;">
-                <input type="text" v-model="tempSettings.baseURL" placeholder="https://api.openai.com/v1"
-                  style="border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.12); padding: 12px; background: rgba(60,62,68,0.92); color: #fff; font-size: 15px; width: 100%; outline: none; transition: box-shadow 0.2s, border-color 0.2s; box-shadow: none;"
-                  @focus="(e) => { e.target.style.boxShadow = '0 0 0 2px #4CAF50'; e.target.style.borderColor = '#4CAF50' }"
-                  @blur="(e) => { e.target.style.boxShadow = 'none'; e.target.style.borderColor = 'rgba(255,255,255,0.12)' }" />
-              </div>
-              <p class="hint-text"
-                style="color: rgba(255,255,255,0.38); margin-left: 0; margin-top: 8px; font-size: 13px;">如用自建代理或替换 API
-                域名，请填写完整地址。</p>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 22px;">
-              <label
-                style="font-weight: 600; color: rgba(255,255,255,0.72); font-size: 15px; margin-bottom: 8px; display: block;">API
-                Key</label>
-              <div class="input-group" style="margin-top: 0;">
-                <input type="password" v-model="tempSettings.apiKey" placeholder="sk-..."
-                  style="border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.12); padding: 12px; background: rgba(60,62,68,0.92); color: #fff; font-size: 15px; width: 100%; outline: none; transition: box-shadow 0.2s, border-color 0.2s; box-shadow: none;"
-                  @focus="(e) => { e.target.style.boxShadow = '0 0 0 2px #4CAF50'; e.target.style.borderColor = '#4CAF50' }"
-                  @blur="(e) => { e.target.style.boxShadow = 'none'; e.target.style.borderColor = 'rgba(255,255,255,0.12)' }" />
-              </div>
-              <p class="hint-text"
-                style="color: rgba(255,255,255,0.38); margin-left: 0; margin-top: 8px; font-size: 13px;">请输入您的 API
-                Key，保存后将在模型页面自动获取可用模型列表。</p>
-            </div>
-          </div>
+          <ProviderSelect v-model:provider="tempSettings.provider" v-model:apiKey="tempSettings.apiKey"
+            v-model:baseURL="tempSettings.baseURL" />
         </div>
 
         <div v-show="uiState.activeTab === 'model'">
@@ -155,7 +104,8 @@
               <label for="prompt-text" style="margin-bottom: 0">系统提示词 (Prompt)</label>
               <div class="prompt-tabs">
                 <div class="prompt-tab" :class="{ active: uiState.promptTab === 'edit' }"
-                  @click="uiState.promptTab = 'edit'">编辑</div>
+                  @click="uiState.promptTab = 'edit'">编辑
+                </div>
                 <div class="prompt-tab" :class="{ active: uiState.promptTab === 'preview' }"
                   @click="uiState.promptTab = 'preview'">预览</div>
               </div>
