@@ -26,6 +26,7 @@
                         <button class="btn-secondary small" @click="toggleFlip">
                             {{ isFlipped ? '切换 PDF' : '切换 Markdown' }}
                         </button>
+                        <button class="btn-secondary small" @click="enableManualInput">手动输入</button>
                         <button class="btn-secondary small" @click="$emit('select-resume')">更换</button>
                         <button class="btn-danger small" @click="$emit('clear-resume')">清除</button>
                     </div>
@@ -42,13 +43,12 @@
                         <div class="pane-label pdf-pane-label">
                             <span>PDF 预览</span>
                             <div class="pdf-pane-actions unified-actions">
-                                <button class="btn-primary parse-btn" @click="$emit('parse-resume')"
-                                    :disabled="isParsing || !canAIParse" :title="canAIParse ? '' : '当前模型不支持 PDF/图片解析'">
+                                <button class="btn-primary parse-btn" @click="handleParseClick" :disabled="isParsing">
                                     <span class="icon" v-if="!isParsing">✨</span>
                                     <span class="icon spin" v-else>⏳</span>
-                                    {{ isParsing ? '解析中...' : (canAIParse ? 'AI 解析为 Markdown' : '模型不支持') }}
+                                    {{ isParsing ? '解析中...' : 'AI 解析为 Markdown' }}
                                 </button>
-                                <span v-if="!canAIParse" class="vision-warning" title="当前模型不支持视觉功能，请切换模型或手动输入">
+                                <span v-if="!modelSupportsFile" class="vision-warning" title="当前模型可能不支持 PDF，点击解析时会提示确认">
                                     ⚠️
                                 </span>
                                 <template v-if="!pdfControlsCollapsed">
@@ -118,6 +118,19 @@
         </div>
 
         <!-- Bottom Action Bar 已移除 -->
+
+        <!-- PDF 解析确认弹窗 -->
+        <div v-if="showConfirmDialog" class="confirm-overlay">
+            <div class="confirm-dialog">
+                <div class="confirm-icon">⚠️</div>
+                <div class="confirm-title">模型可能不支持</div>
+                <div class="confirm-message">当前模型可能不支持 PDF 解析，是否仍要继续？</div>
+                <div class="confirm-actions">
+                    <button class="btn-secondary" @click="showConfirmDialog = false">取消</button>
+                    <button class="btn-primary" @click="confirmParse">继续</button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -126,7 +139,7 @@ import { computed, ref, watch, onMounted, nextTick } from 'vue';
 import { marked } from 'marked';
 import { GetResumePDF } from '../../wailsjs/go/main/App';
 import * as pdfjsLib from 'pdfjs-dist';
-import { supportsVision } from '../utils/modelCapabilities';
+import { supportsVision, supportsPDF } from '../utils/modelCapabilities';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
     'pdfjs-dist/build/pdf.worker.mjs',
@@ -156,15 +169,15 @@ const props = defineProps({
     }
 });
 
-// 检查当前模型是否支持视觉功能
-const canAIParse = computed(() => supportsVision(props.currentModel));
+// 检查当前模型是否支持视觉或 PDF 功能
+const modelSupportsFile = computed(() => supportsVision(props.currentModel) || supportsPDF(props.currentModel));
 
 const emit = defineEmits(['select-resume', 'clear-resume', 'parse-resume', 'update:rawContent', 'update:useMarkdownResume']);
 
 const isFlipped = ref(false);
 const isEditing = ref(false);
 const localContent = ref(props.rawContent);
-// const pdfControlsCollapsed = ref(false);
+const showConfirmDialog = ref(false);
 
 // PDF 相关状态
 const pageNum = ref(1);
@@ -300,6 +313,24 @@ function toggleFlip() {
 
 function toggleEdit() {
     isEditing.value = !isEditing.value;
+}
+
+function handleParseClick() {
+    if (!modelSupportsFile.value) {
+        showConfirmDialog.value = true;
+    } else {
+        emit('parse-resume');
+    }
+}
+
+function confirmParse() {
+    showConfirmDialog.value = false;
+    emit('parse-resume');
+}
+
+function enableManualInput() {
+    isFlipped.value = true;
+    isEditing.value = true;
 }
 </script>
 
@@ -960,5 +991,80 @@ canvas {
     flex-direction: column;
     overflow: auto;
     min-height: 0;
+}
+
+/* Confirmation Dialog Styles */
+.confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.confirm-dialog {
+    background: #2a2a2a;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 320px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.confirm-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.confirm-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.confirm-message {
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.confirm-actions button {
+    min-width: 80px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.confirm-actions .btn-primary {
+    background: #1890ff;
+    color: #fff;
+    border: none;
+}
+
+.confirm-actions .btn-primary:hover {
+    background: #40a9ff;
+}
+
+.confirm-actions .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.confirm-actions .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
 }
 </style>

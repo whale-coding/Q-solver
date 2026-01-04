@@ -173,6 +173,22 @@
     </div>
   </div>
 
+  <!-- 简历兼容性确认弹窗 -->
+  <div v-if="showResumeWarning" class="modal" style="display: flex">
+    <div class="resume-warning-dialog">
+      <div class="warning-icon">⚠️</div>
+      <div class="warning-title">简历可能无法发送</div>
+      <div class="warning-message">
+        当前模型不支持 PDF，且简历未解析为 Markdown。<br />
+        继续解题将跳过简历内容。
+      </div>
+      <div class="warning-actions">
+        <button class="btn-secondary" @click="cancelSolve">取消</button>
+        <button class="btn-primary" @click="continueSolve">继续解题</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast-container">
     <div v-for="(t, i) in toasts" :key="t.id || i" class="toast" :class="[t.type, { show: t.show }]">{{ t.text }}
     </div>
@@ -201,6 +217,7 @@ import { useStatus } from './composables/useStatus'
 import { useShortcuts } from './composables/useShortcuts'
 import { useSettings } from './composables/useSettings'
 import { useSolution } from './composables/useSolution'
+import { supportsVision, supportsPDF } from './utils/modelCapabilities'
 
 // 样式导入
 import './App.global.css'
@@ -242,6 +259,23 @@ const resumeState = reactive({
 watch(() => resumeState.rawContent, (newVal) => {
   tempSettings.resumeContent = newVal || ''
 })
+
+// 简历兼容性警告弹窗
+const showResumeWarning = ref(false)
+let pendingSolveCallback = null
+
+function cancelSolve() {
+  showResumeWarning.value = false
+  pendingSolveCallback = null
+}
+
+function continueSolve() {
+  showResumeWarning.value = false
+  if (pendingSolveCallback) {
+    pendingSolveCallback()
+    pendingSolveCallback = null
+  }
+}
 
 async function selectResume() {
   const path = await SelectResume()
@@ -384,6 +418,22 @@ onMounted(() => {
   })
 
   EventsOn('start-solving', () => {
+    // 检查简历兼容性
+    const hasPdfResume = settings.resumePath && !settings.useMarkdownResume
+    const hasMarkdownContent = settings.resumeContent && settings.useMarkdownResume
+    const modelCanHandle = supportsVision(settings.model) || supportsPDF(settings.model)
+
+    if (hasPdfResume && !hasMarkdownContent && !modelCanHandle) {
+      // 模型不支持，弹窗确认
+      pendingSolveCallback = proceedWithSolve
+      showResumeWarning.value = true
+      return
+    }
+
+    proceedWithSolve()
+  })
+
+  function proceedWithSolve() {
     errorState.show = false
     flash('solve')
     statusText.value = '正在思考...'
@@ -405,7 +455,7 @@ onMounted(() => {
       renderedContent.value = ''
       isAppending.value = false
     }
-  })
+  }
 
   EventsOn('toggle-visibility', (isVisibleToCapture) => {
     flash('toggle')
