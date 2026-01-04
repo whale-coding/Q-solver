@@ -25,7 +25,6 @@
                     <div class="file-icon">📎</div>
                     <div class="file-details">
                         <span class="file-name">{{ fileName }}</span>
-                        <span class="file-meta">{{ pageCount }} 页</span>
                     </div>
                 </div>
                 <div class="file-actions">
@@ -35,19 +34,10 @@
                         <span class="toggle-dot"></span>
                         <span>Markdown 模式</span>
                     </div>
-                    <!-- Parse Button -->
-                    <button class="btn-parse" @click="handleParseClick" :disabled="isParsing">
-                        <span v-if="!isParsing">✨</span>
-                        <span v-else class="spin">⏳</span>
-                        {{ isParsing ? '解析中' : 'AI 解析' }}
-                    </button>
                     <!-- Menu Button -->
                     <div class="menu-wrapper">
                         <button class="btn-menu" @click="showMenu = !showMenu">⋮</button>
                         <div v-if="showMenu" class="dropdown-menu">
-                            <div class="menu-item" @click="handleMenuAction('manual')">
-                                <span>📝</span> 手动输入
-                            </div>
                             <div class="menu-item" @click="handleMenuAction('change')">
                                 <span>📂</span> 更换文件
                             </div>
@@ -59,47 +49,55 @@
                 </div>
             </div>
 
-            <!-- Tab Navigation -->
-            <div class="tab-nav">
-                <button class="tab-btn" :class="{ active: activeTab === 'pdf' }" @click="activeTab = 'pdf'">
-                    <span class="tab-icon">📑</span> PDF 预览
-                </button>
-                <button class="tab-btn" :class="{ active: activeTab === 'markdown' }" @click="activeTab = 'markdown'">
-                    <span class="tab-icon">📝</span> Markdown
-                    <span v-if="localContent" class="tab-badge">✓</span>
-                </button>
-            </div>
-
             <!-- Content Area -->
             <div class="content-area">
-                <!-- PDF Preview Tab -->
-                <div v-show="activeTab === 'pdf'" class="preview-panel pdf-preview">
-                    <div v-if="pageCount > 0" class="pdf-viewer">
-                        <div class="canvas-container">
-                            <canvas ref="canvasRef"></canvas>
-                        </div>
-                        <div class="pdf-controls">
-                            <button class="ctrl-btn" @click="prevPage" :disabled="pageNum <= 1">‹</button>
-                            <span class="page-indicator">{{ pageNum }} / {{ pageCount }}</span>
-                            <button class="ctrl-btn" @click="nextPage" :disabled="pageNum >= pageCount">›</button>
-                        </div>
+                <!-- Status Card (no markdown yet) -->
+                <div v-if="!localContent && !isEditing" class="status-card">
+                    <div class="status-icon">📄</div>
+                    <h4 class="status-title">文件已就绪</h4>
+                    <p class="status-desc">点击 AI 解析将 PDF 转换为 Markdown 格式</p>
+
+                    <div class="status-actions">
+                        <button class="btn-parse-lg" @click="handleParseClick" :disabled="isParsing">
+                            <span v-if="!isParsing">✨</span>
+                            <span v-else class="spin">⏳</span>
+                            {{ isParsing ? '解析中...' : 'AI 解析为 Markdown' }}
+                        </button>
+                        <button class="btn-secondary-lg" @click="isEditing = true">
+                            📝 手动输入
+                        </button>
                     </div>
-                    <div v-else class="loading-state">
-                        <span class="spin">⏳</span>
-                        <p>加载中...</p>
-                    </div>
+
+                    <p v-if="!modelSupportsFile" class="status-warning">
+                        ⚠️ 当前模型可能不支持 PDF 解析
+                    </p>
                 </div>
 
-                <!-- Markdown Tab -->
-                <div v-show="activeTab === 'markdown'" class="preview-panel markdown-preview">
-                    <!-- Edit/Preview Toggle -->
-                    <div class="markdown-toolbar" v-if="localContent || isEditing">
-                        <button class="toolbar-btn" :class="{ active: !isEditing }" @click="isEditing = false">
-                            预览
-                        </button>
-                        <button class="toolbar-btn" :class="{ active: isEditing }" @click="isEditing = true">
-                            编辑
-                        </button>
+                <!-- Parsing State -->
+                <div v-else-if="isParsing && !localContent" class="status-card parsing">
+                    <span class="spin large">⏳</span>
+                    <h4 class="status-title">AI 正在解析</h4>
+                    <p class="status-desc">正在将 PDF 转换为 Markdown...</p>
+                </div>
+
+                <!-- Markdown Content -->
+                <div v-else class="markdown-panel">
+                    <!-- Toolbar -->
+                    <div class="markdown-toolbar">
+                        <div class="toolbar-tabs">
+                            <button class="toolbar-btn" :class="{ active: !isEditing }" @click="isEditing = false">
+                                预览
+                            </button>
+                            <button class="toolbar-btn" :class="{ active: isEditing }" @click="isEditing = true">
+                                编辑
+                            </button>
+                        </div>
+                        <div class="toolbar-actions">
+                            <button class="btn-reparse" @click="handleParseClick" :disabled="isParsing" title="重新解析">
+                                <span v-if="!isParsing">🔄</span>
+                                <span v-else class="spin">⏳</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Editor -->
@@ -109,21 +107,7 @@
                     </div>
 
                     <!-- Preview -->
-                    <div v-else-if="renderedContent" class="md-preview" v-html="renderedContent"></div>
-
-                    <!-- Parsing State -->
-                    <div v-else-if="isParsing" class="empty-content">
-                        <span class="spin large">⏳</span>
-                        <p>AI 正在解析您的简历...</p>
-                    </div>
-
-                    <!-- Empty State -->
-                    <div v-else class="empty-content">
-                        <div class="empty-icon">📝</div>
-                        <p class="empty-text">暂无 Markdown 内容</p>
-                        <p class="empty-subtext">点击 "AI 解析" 自动转换，或手动输入</p>
-                        <button class="btn-secondary-sm" @click="isEditing = true">开始编辑</button>
-                    </div>
+                    <div v-else class="md-preview" v-html="renderedContent"></div>
                 </div>
             </div>
         </div>
@@ -146,16 +130,9 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted, nextTick } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { marked } from 'marked';
-import { GetResumePDF } from '../../wailsjs/go/main/App';
-import * as pdfjsLib from 'pdfjs-dist';
 import { supportsVision, supportsPDF } from '../utils/modelCapabilities';
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.mjs',
-    import.meta.url
-).href;
 
 const props = defineProps({
     resumePath: { type: String, default: '' },
@@ -168,19 +145,10 @@ const props = defineProps({
 const emit = defineEmits(['select-resume', 'clear-resume', 'parse-resume', 'update:rawContent', 'update:useMarkdownResume']);
 
 // UI State
-const activeTab = ref('pdf');
 const isEditing = ref(false);
 const showMenu = ref(false);
 const showConfirmDialog = ref(false);
 const localContent = ref(props.rawContent);
-
-// PDF State
-const pageNum = ref(1);
-const pageCount = ref(0);
-const scale = ref(0.8);
-const canvasRef = ref(null);
-let pdfDoc = null;
-let renderTask = null;
 
 // Computed
 const modelSupportsFile = computed(() => supportsVision(props.currentModel) || supportsPDF(props.currentModel));
@@ -200,17 +168,6 @@ watch(() => props.rawContent, (newVal) => {
     }
 });
 
-watch(() => props.resumePath, async (newVal) => {
-    if (newVal) {
-        await loadPdfPreview();
-    } else {
-        pdfDoc = null;
-        pageCount.value = 0;
-        pageNum.value = 1;
-        clearCanvas();
-    }
-});
-
 // Click outside to close menu
 watch(showMenu, (val) => {
     if (val) {
@@ -223,80 +180,6 @@ watch(showMenu, (val) => {
 function closeMenu() {
     showMenu.value = false;
     document.removeEventListener('click', closeMenu);
-}
-
-// Lifecycle
-onMounted(async () => {
-    if (props.resumePath) {
-        await loadPdfPreview();
-    }
-});
-
-// PDF Functions
-async function loadPdfPreview() {
-    try {
-        const base64 = await GetResumePDF();
-        if (base64) {
-            const binaryString = window.atob(base64);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            const loadingTask = pdfjsLib.getDocument({ data: bytes });
-            pdfDoc = await loadingTask.promise;
-            pageCount.value = pdfDoc.numPages;
-            pageNum.value = 1;
-            nextTick(() => renderPage(pageNum.value));
-        }
-    } catch (e) {
-        console.error("Failed to load PDF:", e);
-    }
-}
-
-async function renderPage(num) {
-    if (!pdfDoc) return;
-    try {
-        const page = await pdfDoc.getPage(num);
-        const canvas = canvasRef.value;
-        if (!canvas) return;
-        if (renderTask) renderTask.cancel();
-
-        const ctx = canvas.getContext('2d');
-        const viewport = page.getViewport({ scale: scale.value });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        renderTask = page.render({ canvasContext: ctx, viewport });
-        await renderTask.promise;
-    } catch (e) {
-        if (e.name !== 'RenderingCancelledException') {
-            console.error("Render error:", e);
-        }
-    } finally {
-        renderTask = null;
-    }
-}
-
-function clearCanvas() {
-    const canvas = canvasRef.value;
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-}
-
-function prevPage() {
-    if (pageNum.value > 1) {
-        pageNum.value--;
-        renderPage(pageNum.value);
-    }
-}
-
-function nextPage() {
-    if (pageNum.value < pageCount.value) {
-        pageNum.value++;
-        renderPage(pageNum.value);
-    }
 }
 
 // Content Functions
@@ -321,10 +204,6 @@ function confirmParse() {
 function handleMenuAction(action) {
     showMenu.value = false;
     switch (action) {
-        case 'manual':
-            activeTab.value = 'markdown';
-            isEditing.value = true;
-            break;
         case 'change':
             emit('select-resume');
             break;
@@ -337,7 +216,7 @@ function handleMenuAction(action) {
 
 <style scoped>
 /* ========================================
-   Resume Import - Modern UI
+   Resume Import - Simplified UI
    ======================================== */
 
 .resume-import {
@@ -484,24 +363,25 @@ function handleMenuAction(action) {
 }
 
 .file-icon {
-    font-size: 24px;
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 8px;
 }
 
 .file-details {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: center;
 }
 
 .file-name {
     font-size: 13px;
     font-weight: 500;
     color: #fff;
-}
-
-.file-meta {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.4);
 }
 
 .file-actions {
@@ -545,30 +425,6 @@ function handleMenuAction(action) {
 .toggle-chip.active .toggle-dot {
     background: #6366f1;
     box-shadow: 0 0 6px rgba(99, 102, 241, 0.5);
-}
-
-.btn-parse {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border: none;
-    border-radius: 6px;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-parse:hover:not(:disabled) {
-    box-shadow: 0 2px 12px rgba(99, 102, 241, 0.4);
-}
-
-.btn-parse:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
 }
 
 .menu-wrapper {
@@ -632,52 +488,6 @@ function handleMenuAction(action) {
 }
 
 /* ========================================
-   Tab Navigation
-   ======================================== */
-
-.tab-nav {
-    display: flex;
-    gap: 4px;
-    padding: 4px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
-}
-
-.tab-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 16px;
-    background: transparent;
-    border: none;
-    border-radius: 6px;
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.tab-btn:hover {
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.tab-btn.active {
-    background: rgba(99, 102, 241, 0.15);
-    color: #a5b4fc;
-}
-
-.tab-icon {
-    font-size: 14px;
-}
-
-.tab-badge {
-    font-size: 10px;
-    color: #10b981;
-}
-
-/* ========================================
    Content Area
    ======================================== */
 
@@ -690,80 +500,125 @@ function handleMenuAction(action) {
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.preview-panel {
+/* ========================================
+   Status Card
+   ======================================== */
+
+.status-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px;
+    text-align: center;
+}
+
+.status-card.parsing {
+    gap: 16px;
+}
+
+.status-icon {
+    font-size: 48px;
+    opacity: 0.8;
+}
+
+.status-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.status-desc {
+    margin: 0;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.status-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.btn-parse-lg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: transparent;
+    border: 1.5px solid rgba(99, 102, 241, 0.5);
+    border-radius: 8px;
+    color: #a5b4fc;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-parse-lg:hover:not(:disabled) {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.8);
+    color: #c7d2fe;
+}
+
+.btn-parse-lg:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary-lg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: transparent;
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary-lg:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.status-warning {
+    margin: 8px 0 0 0;
+    font-size: 12px;
+    color: #fbbf24;
+}
+
+/* ========================================
+   Markdown Panel
+   ======================================== */
+
+.markdown-panel {
     height: 100%;
     display: flex;
     flex-direction: column;
 }
 
-/* PDF Preview */
-.pdf-viewer {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-.canvas-container {
-    flex: 1;
-    overflow: auto;
-    display: flex;
-    justify-content: center;
-    padding: 16px;
-    background: #1a1a1f;
-}
-
-.canvas-container canvas {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-}
-
-.pdf-controls {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.3);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.ctrl-btn {
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.08);
-    border: none;
-    border-radius: 6px;
-    color: #fff;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.ctrl-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-.ctrl-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-.page-indicator {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
-    font-variant-numeric: tabular-nums;
-}
-
-/* Markdown Preview */
 .markdown-toolbar {
     display: flex;
-    gap: 2px;
-    padding: 8px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
     background: rgba(0, 0, 0, 0.2);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.toolbar-tabs {
+    display: flex;
+    gap: 2px;
 }
 
 .toolbar-btn {
@@ -784,6 +639,31 @@ function handleMenuAction(action) {
 .toolbar-btn.active {
     background: rgba(99, 102, 241, 0.15);
     color: #a5b4fc;
+}
+
+.btn-reparse {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-reparse:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.btn-reparse:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .editor-wrapper {
@@ -866,50 +746,6 @@ function handleMenuAction(action) {
     padding-left: 12px;
     margin: 0.5em 0;
     color: rgba(255, 255, 255, 0.6);
-}
-
-/* Empty Content */
-.empty-content,
-.loading-state {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: rgba(255, 255, 255, 0.4);
-}
-
-.empty-icon {
-    font-size: 36px;
-    opacity: 0.5;
-}
-
-.empty-text {
-    font-size: 14px;
-    margin: 0;
-}
-
-.empty-subtext {
-    font-size: 12px;
-    margin: 0;
-    opacity: 0.6;
-}
-
-.btn-secondary-sm {
-    margin-top: 12px;
-    padding: 6px 16px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-secondary-sm:hover {
-    background: rgba(255, 255, 255, 0.12);
 }
 
 /* ========================================
