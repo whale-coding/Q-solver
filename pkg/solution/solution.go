@@ -7,8 +7,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-
-	"github.com/openai/openai-go"
 )
 
 type Callbacks struct {
@@ -23,13 +21,13 @@ type Request struct {
 
 type Solver struct {
 	llmProvider llm.Provider
-	chatHistory []openai.ChatCompletionMessageParamUnion
+	chatHistory []llm.Message // 改用统一的 Message 类型
 }
 
 func NewSolver(provider llm.Provider) *Solver {
 	return &Solver{
 		llmProvider: provider,
-		chatHistory: make([]openai.ChatCompletionMessageParamUnion, 0),
+		chatHistory: make([]llm.Message, 0),
 	}
 }
 
@@ -38,7 +36,7 @@ func (s *Solver) SetProvider(provider llm.Provider) {
 }
 
 func (s *Solver) ClearHistory() {
-	s.chatHistory = make([]openai.ChatCompletionMessageParamUnion, 0)
+	s.chatHistory = make([]llm.Message, 0)
 }
 
 func (s *Solver) Solve(ctx context.Context, req Request, cb Callbacks) bool {
@@ -66,27 +64,23 @@ func (s *Solver) Solve(ctx context.Context, req Request, cb Callbacks) bool {
 	}
 
 	// 3. 构建当前用户消息（包含截图）
-	userParts := []openai.ChatCompletionContentPartUnionParam{
-		openai.ImageContentPart(openai.ChatCompletionContentPartImageImageURLParam{
-			URL: req.ScreenshotBase64,
-		}),
+	userParts := []llm.ContentPart{
+		llm.ImagePart(req.ScreenshotBase64),
 	}
 
 	// 如果使用 PDF 简历，将简历附件加入用户消息
 	if !req.Config.GetUseMarkdownResume() && req.ResumeBase64 != "" {
 		userParts = append(userParts,
-			openai.TextContentPart("\n\n# 候选人简历已作为附件发送，请参考简历内容回答。"),
-			openai.ImageContentPart(openai.ChatCompletionContentPartImageImageURLParam{
-				URL: "data:application/pdf;base64," + req.ResumeBase64,
-			}),
+			llm.TextPart("\n\n# 候选人简历已作为附件发送，请参考简历内容回答。"),
+			llm.PDFPart(req.ResumeBase64),
 		)
 		logger.Println("已注入简历附件 (PDF)")
 	}
 
-	currentUserMsg := openai.UserMessage(userParts)
+	currentUserMsg := llm.NewMultiPartMessage(llm.RoleUser, userParts)
 
 	// 4. 构建最终发送的消息列表
-	var messagesToSend []openai.ChatCompletionMessageParamUnion
+	var messagesToSend []llm.Message
 
 	if req.Config.GetKeepContext() {
 		// 保持上下文模式：使用并更新历史记录
@@ -94,7 +88,7 @@ func (s *Solver) Solve(ctx context.Context, req Request, cb Callbacks) bool {
 		messagesToSend = append(messagesToSend, s.chatHistory...)
 	} else {
 		// 不保持上下文模式：每次都是全新对话
-		messagesToSend = append(messagesToSend, openai.SystemMessage(systemPrompt.String()))
+		messagesToSend = append(messagesToSend, llm.NewSystemMessage(systemPrompt.String()))
 	}
 	messagesToSend = append(messagesToSend, currentUserMsg)
 
@@ -103,9 +97,15 @@ func (s *Solver) Solve(ctx context.Context, req Request, cb Callbacks) bool {
 		cb.EmitEvent("solution-stream-start")
 	}
 
-	answer, err := s.llmProvider.GenerateContentStream(ctx, messagesToSend, func(token string) {
+	response, err := s.llmProvider.GenerateContentStream(ctx, messagesToSend, func(chunk llm.StreamChunk) {
 		if cb.EmitEvent != nil {
-			cb.EmitEvent("solution-stream-chunk", token)
+			// 根据 chunk 类型发送不同事件
+			switch chunk.Type {
+			case llm.ChunkThinking:
+				cb.EmitEvent("solution-stream-thinking", chunk.Content)
+			case llm.ChunkContent:
+				cb.EmitEvent("solution-stream-chunk", chunk.Content)
+			}
 		}
 	})
 
@@ -126,16 +126,16 @@ func (s *Solver) Solve(ctx context.Context, req Request, cb Callbacks) bool {
 
 	// 6. 处理结果
 	if cb.EmitEvent != nil {
-		cb.EmitEvent("solution", answer)
+		cb.EmitEvent("solution", response.Content)
 	}
 
 	if req.Config.GetKeepContext() {
 		// 保持上下文模式：保存完整的用户消息和助手回复到历史
 		s.chatHistory = append(s.chatHistory, currentUserMsg)
-		s.chatHistory = append(s.chatHistory, openai.AssistantMessage(answer))
+		s.chatHistory = append(s.chatHistory, llm.NewAssistantMessage(response.Content))
 	} else {
 		// 不保持上下文模式：清空历史
-		s.chatHistory = []openai.ChatCompletionMessageParamUnion{}
+		s.chatHistory = []llm.Message{}
 	}
 
 	return true
@@ -144,20 +144,20 @@ func (s *Solver) Solve(ctx context.Context, req Request, cb Callbacks) bool {
 // ensureSystemPrompt 确保 chatHistory 的第一条是正确的 System Prompt
 func (s *Solver) ensureSystemPrompt(prompt string) {
 	if len(s.chatHistory) == 0 {
-		s.chatHistory = append(s.chatHistory, openai.SystemMessage(prompt))
+		s.chatHistory = append(s.chatHistory, llm.NewSystemMessage(prompt))
 		logger.Println("插入 SystemPrompt")
 		return
 	}
 
 	// 检查第一条是否为系统消息
-	if s.chatHistory[0].OfSystem != nil {
-		if s.chatHistory[0].OfSystem.Content.OfString.Value != prompt {
-			s.chatHistory[0] = openai.SystemMessage(prompt)
+	if s.chatHistory[0].Role == llm.RoleSystem {
+		if s.chatHistory[0].Content != prompt {
+			s.chatHistory[0] = llm.NewSystemMessage(prompt)
 			logger.Println("替换 SystemPrompt")
 		}
 	} else {
 		// 第一条不是系统消息，插入到头部
-		s.chatHistory = append([]openai.ChatCompletionMessageParamUnion{openai.SystemMessage(prompt)}, s.chatHistory...)
+		s.chatHistory = append([]llm.Message{llm.NewSystemMessage(prompt)}, s.chatHistory...)
 		logger.Println("插入 SystemPrompt 到消息历史头部")
 	}
 }

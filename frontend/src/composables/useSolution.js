@@ -1,15 +1,17 @@
-import { ref, reactive, nextTick } from 'vue'
+import { ref, reactive, nextTick, computed } from 'vue'
 import { marked } from 'marked'
 import { SaveImageToFile } from '../../wailsjs/go/main/App'
 
 export function useSolution(settings) {
-  const renderedContent = ref('')
+  // 移除全局 renderedContent，改用 currentRounds 计算属性
   const history = ref([])
   const activeHistoryIndex = ref(0)
   const isLoading = ref(false)
   const isAppending = ref(false)
   const shouldOverwriteHistory = ref(false)
+  const isThinking = ref(false)  // 是否正在显示思维链
   let streamBuffer = ''
+  let thinkingBuffer = ''  // 思维链缓冲区
   let pendingUserScreenshot = ''  // 待关联到历史记录的用户截图
 
   const errorState = reactive({
@@ -69,7 +71,8 @@ export function useSolution(settings) {
       time: new Date().toLocaleTimeString(),
       rounds: [{
         userScreenshot: userScreenshot || '',
-        aiResponse: ''
+        thinking: '',      // 思维链
+        aiResponse: ''     // AI 回复
       }]
     }
   }
@@ -83,6 +86,7 @@ export function useSolution(settings) {
     }
     item.rounds.push({
       userScreenshot: userScreenshot || '',
+      thinking: '',
       aiResponse: ''
     })
   }
@@ -97,29 +101,34 @@ export function useSolution(settings) {
 
   // ==================== 核心逻辑 ====================
 
+  // 计算属性：获取当前选中历史项的 rounds
+  const currentRounds = computed(() => {
+    const item = history.value[activeHistoryIndex.value]
+    return item?.rounds || []
+  })
+
   function selectHistory(idx) {
     const item = history.value[idx]
     if (item) {
-      renderedContent.value = renderMarkdown(getFullContent(item))
       activeHistoryIndex.value = idx
+      // Vue 响应式自动更新视图
     }
   }
 
   function handleStreamStart() {
+    // 重置缓冲区
+    streamBuffer = ''
+    thinkingBuffer = ''
+    isThinking.value = false
+
     if (settings.keepContext && history.value.length > 0 && !shouldOverwriteHistory.value) {
       // 追加模式：向当前历史项添加新轮次
       const currentItem = history.value[0]
       addRoundToItem(currentItem, pendingUserScreenshot)
-
-      // 设置 streamBuffer 为之前所有内容（用于构建上下文）
-      streamBuffer = ''
       activeHistoryIndex.value = 0
       pendingUserScreenshot = ''
     } else {
       // 新建模式
-      streamBuffer = ''
-      renderedContent.value = ''
-
       if (shouldOverwriteHistory.value && history.value.length > 0) {
         // 覆盖现有第一条
         history.value[0] = createHistoryItem(pendingUserScreenshot)
@@ -136,19 +145,41 @@ export function useSolution(settings) {
   function handleStreamChunk(token) {
     if (isLoading.value) isLoading.value = false
     if (isAppending.value) isAppending.value = false
+    isThinking.value = false  // 收到正文时关闭思维链状态
 
     streamBuffer += token
 
     // 更新当前轮次的 aiResponse
     if (history.value.length > 0) {
-      const currentRound = getCurrentRound(history.value[0])
-      if (currentRound) {
-        currentRound.aiResponse = streamBuffer
+      const round = getCurrentRound(history.value[0])
+      if (round) {
+        round.aiResponse = streamBuffer
       }
     }
 
-    // 渲染所有轮次的内容
-    renderedContent.value = renderMarkdown(getFullContent(history.value[0]))
+    nextTick(() => {
+      const contentDiv = document.getElementById('content')
+      if (contentDiv) {
+        contentDiv.scrollTop = contentDiv.scrollHeight
+      }
+    })
+  }
+
+  // 处理思维链 token
+  function handleThinkingChunk(token) {
+    if (isLoading.value) isLoading.value = false
+    if (isAppending.value) isAppending.value = false
+    isThinking.value = true
+
+    thinkingBuffer += token
+
+    // 更新当前轮次的 thinking
+    if (history.value.length > 0) {
+      const round = getCurrentRound(history.value[0])
+      if (round) {
+        round.thinking = thinkingBuffer
+      }
+    }
 
     nextTick(() => {
       const contentDiv = document.getElementById('content')
@@ -160,15 +191,14 @@ export function useSolution(settings) {
 
   function handleSolution(data) {
     isLoading.value = false
+    isThinking.value = false
 
     if (history.value.length > 0) {
-      const currentRound = getCurrentRound(history.value[0])
-      if (currentRound && !currentRound.aiResponse) {
-        currentRound.aiResponse = data
+      const round = getCurrentRound(history.value[0])
+      if (round && !round.aiResponse) {
+        round.aiResponse = data
       }
     }
-
-    renderedContent.value = renderMarkdown(getFullContent(history.value[0]))
   }
 
   function setStreamBuffer(val) {
@@ -189,12 +219,11 @@ export function useSolution(settings) {
 
     // 调整活动索引
     if (history.value.length === 0) {
-      renderedContent.value = ''
       activeHistoryIndex.value = 0
     } else if (index <= activeHistoryIndex.value) {
       activeHistoryIndex.value = Math.max(0, activeHistoryIndex.value - 1)
-      selectHistory(activeHistoryIndex.value)
     }
+    // Vue 响应式自动更新视图
   }
 
   // ==================== 导出图片 ====================
@@ -427,14 +456,15 @@ export function useSolution(settings) {
   }
 
   return {
-    renderedContent,
+    currentRounds,
     history,
     activeHistoryIndex,
     isLoading,
     isAppending,
+    isThinking,
     shouldOverwriteHistory,
     errorState,
-    // 辅助函数（供外部使用）
+    // 辅助函数
     renderMarkdown,
     getFullContent,
     getSummary,
@@ -443,6 +473,7 @@ export function useSolution(settings) {
     selectHistory,
     handleStreamStart,
     handleStreamChunk,
+    handleThinkingChunk,
     handleSolution,
     setStreamBuffer,
     setUserScreenshot,

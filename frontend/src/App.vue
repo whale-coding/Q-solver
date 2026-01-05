@@ -25,12 +25,35 @@
       <ErrorView v-else-if="errorState.show" :errorState="errorState" :solveShortcut="solveShortcut" />
       <LoadingView v-else-if="isLoading" />
       <div v-else id="content" class="markdown-body">
-        <div v-html="renderedContent"></div>
-        <div v-if="isAppending" class="append-loading">
+        <template v-for="(round, idx) in currentRounds" :key="idx">
+          <div class="chat-round">
+            <!-- 思维链区域（可折叠） -->
+            <details v-if="round.thinking" class="thinking-block">
+              <summary class="thinking-header">
+                <span class="thinking-icon">💭</span>
+                <span class="thinking-title">思维过程</span>
+                <span class="thinking-hint">点击展开/收起</span>
+              </summary>
+              <div class="thinking-content" v-html="renderMarkdown(round.thinking)"></div>
+            </details>
+            <!-- 正文回复 -->
+            <div class="ai-response" v-html="renderMarkdown(round.aiResponse)"></div>
+          </div>
+          <hr v-if="idx < currentRounds.length - 1" class="round-divider" />
+        </template>
+        <!-- 思维中状态 -->
+        <div v-if="isThinking" class="thinking-loading">
+          <div class="thinking-indicator">
+            <span class="pulse-dot"></span>
+            <span class="text">正在思考中...</span>
+          </div>
+        </div>
+        <!-- 追加加载状态 -->
+        <div v-if="isAppending && !isThinking" class="append-loading">
           <div class="ai-icon">
             <div class="ai-icon-inner"></div>
           </div>
-          <span class="text">AI 正在思考</span>
+          <span class="text">AI 正在回复</span>
           <div class="wave-dots">
             <span></span><span></span><span></span>
           </div>
@@ -188,8 +211,8 @@ const {
 
 
 const {
-  renderedContent, history, activeHistoryIndex, isLoading, isAppending, shouldOverwriteHistory,
-  errorState, renderMarkdown, getFullContent, getSummary, getRoundsCount, selectHistory, handleStreamStart, handleStreamChunk, handleSolution, setStreamBuffer,
+  currentRounds, history, activeHistoryIndex, isLoading, isAppending, isThinking, shouldOverwriteHistory,
+  errorState, renderMarkdown, getFullContent, getSummary, getRoundsCount, selectHistory, handleStreamStart, handleStreamChunk, handleThinkingChunk, handleSolution, setStreamBuffer,
   setUserScreenshot, deleteHistory, exportImage
 } = useSolution(settings)
 
@@ -323,15 +346,15 @@ onMounted(() => {
     if (settings.keepContext && history.value.length > 0 && activeHistoryIndex.value === 0) {
       isLoading.value = false
       isAppending.value = true
-      nextTick(() => {
+      // 使用 setTimeout 确保 DOM 更新后滚动
+      setTimeout(() => {
         const contentDiv = document.getElementById('content')
         if (contentDiv) {
           contentDiv.scrollTop = contentDiv.scrollHeight
         }
-      })
+      }, 50)
     } else {
       isLoading.value = true
-      renderedContent.value = ''
       isAppending.value = false
     }
   }
@@ -383,6 +406,10 @@ onMounted(() => {
 
   EventsOn('solution-stream-chunk', (token) => {
     handleStreamChunk(token)
+  })
+
+  EventsOn('solution-stream-thinking', (token) => {
+    handleThinkingChunk(token)
   })
 
   // 错误处理
@@ -438,10 +465,9 @@ onMounted(() => {
       const current = history.value[0]
 
       if (settings.keepContext && current.rounds?.length > 1) {
-        // 移除最后一轮（未完成的）
+        // 移除最后一轮（未完成的），Vue 响应式自动更新视图
         current.rounds.pop()
         setStreamBuffer('')
-        renderedContent.value = renderMarkdown(getFullContent(current))
 
         isAppending.value = true
         isLoading.value = false
@@ -459,7 +485,6 @@ onMounted(() => {
     if (current.rounds?.length) {
       current.rounds[0].aiResponse = ''
     }
-    renderedContent.value = ''
     setStreamBuffer('')
     isLoading.value = true
     statusText.value = '正在思考...'

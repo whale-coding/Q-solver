@@ -12,6 +12,146 @@
     overflow-y: auto;
 }
 
+/* Chat Round Styles */
+.chat-round {
+    animation: roundFadeIn 0.2s ease-out;
+}
+
+.round-divider {
+    border: none;
+    border-top: 1px dashed rgba(255, 255, 255, 0.12);
+    margin: 20px 0;
+}
+
+@keyframes roundFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   Thinking Block Styles
+   ======================================== */
+
+.thinking-block {
+    margin-bottom: 16px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    overflow: hidden;
+}
+
+.thinking-block[open] {
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+.thinking-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition-fast);
+}
+
+.thinking-header:hover {
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.thinking-icon {
+    font-size: 16px;
+}
+
+.thinking-title {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.thinking-hint {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+.thinking-content {
+    padding: 12px 14px;
+    border-top: 1px solid rgba(139, 92, 246, 0.15);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.thinking-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.thinking-content::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 2px;
+}
+
+/* Thinking Loading State */
+.thinking-loading {
+    padding: var(--space-4) 0;
+    animation: appendFadeIn 0.4s ease-out;
+}
+
+.thinking-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 10px 14px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.pulse-dot {
+    width: 10px;
+    height: 10px;
+    background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+    border-radius: 50%;
+    animation: pulseDot 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+
+    0%,
+    100% {
+        transform: scale(0.8);
+        opacity: 0.6;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+        box-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
+    }
+}
+
+.thinking-indicator .text {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.ai-response {
+    /* AI 回复正文样式（继承 markdown-body） */
+}
+
 .main-interface {
     pointer-events: none;
     overflow: hidden;
