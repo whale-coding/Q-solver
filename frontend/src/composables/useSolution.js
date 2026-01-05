@@ -12,6 +12,7 @@ export function useSolution(settings) {
   const isThinking = ref(false)  // 是否正在显示思维链
   let streamBuffer = ''
   let thinkingBuffer = ''  // 思维链缓冲区
+  let thinkingStartTime = 0 // 思考开始时间
   let pendingUserScreenshot = ''  // 待关联到历史记录的用户截图
 
   const errorState = reactive({
@@ -71,8 +72,9 @@ export function useSolution(settings) {
       time: new Date().toLocaleTimeString(),
       rounds: [{
         userScreenshot: userScreenshot || '',
-        thinking: '',      // 思维链
-        aiResponse: ''     // AI 回复
+        thinking: '',           // 思维链
+        thinkingDuration: 0,    // 思考时长(秒)
+        aiResponse: ''          // AI 回复
       }]
     }
   }
@@ -87,6 +89,7 @@ export function useSolution(settings) {
     item.rounds.push({
       userScreenshot: userScreenshot || '',
       thinking: '',
+      thinkingDuration: 0,
       aiResponse: ''
     })
   }
@@ -119,6 +122,7 @@ export function useSolution(settings) {
     // 重置缓冲区
     streamBuffer = ''
     thinkingBuffer = ''
+    thinkingStartTime = 0
     isThinking.value = false
 
     if (settings.keepContext && history.value.length > 0 && !shouldOverwriteHistory.value) {
@@ -169,6 +173,11 @@ export function useSolution(settings) {
   function handleThinkingChunk(token) {
     if (isLoading.value) isLoading.value = false
     if (isAppending.value) isAppending.value = false
+
+    // 记录思考开始时间
+    if (!isThinking.value) {
+      thinkingStartTime = Date.now()
+    }
     isThinking.value = true
 
     thinkingBuffer += token
@@ -178,6 +187,10 @@ export function useSolution(settings) {
       const round = getCurrentRound(history.value[0])
       if (round) {
         round.thinking = thinkingBuffer
+        // 实时更新思考时长
+        if (thinkingStartTime > 0) {
+          round.thinkingDuration = (Date.now() - thinkingStartTime) / 1000
+        }
       }
     }
 
@@ -191,7 +204,16 @@ export function useSolution(settings) {
 
   function handleSolution(data) {
     isLoading.value = false
+
+    // 记录最终思考时长
+    if (isThinking.value && thinkingStartTime > 0 && history.value.length > 0) {
+      const round = getCurrentRound(history.value[0])
+      if (round) {
+        round.thinkingDuration = (Date.now() - thinkingStartTime) / 1000
+      }
+    }
     isThinking.value = false
+    thinkingStartTime = 0
 
     if (history.value.length > 0) {
       const round = getCurrentRound(history.value[0])

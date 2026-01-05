@@ -36,7 +36,7 @@ func NewService(cfg *config.Config) *Service {
 
 // UpdateProvider 更新 Provider（配置变更时调用）
 func (s *Service) UpdateProvider() {
-	providerType := DetectProviderType(s.config.GetBaseURL(), s.config.GetModel())
+	providerType := DetectProviderType( s.config.GetProvider())
 	s.provider = CreateProvider(providerType, s.config)
 }
 
@@ -46,24 +46,15 @@ func (s *Service) GetProvider() Provider {
 }
 
 // DetectProviderType 根据 baseURL 或 model 名称自动识别提供商
-func DetectProviderType(baseURL, model string) ProviderType {
+func DetectProviderType(Provider string) ProviderType {
 	// 1. 优先根据 baseURL 判断
 	switch {
-	case strings.Contains(baseURL, "generativelanguage.googleapis.com"):
+	case strings.Contains(Provider, "google"):
 		return ProviderGemini
-	case strings.Contains(baseURL, "anthropic.com"):
+	case strings.Contains(Provider, "anthropic"):
 		return ProviderClaude
 	}
-
-	// 2. 根据模型名称判断
-	switch {
-	case strings.HasPrefix(model, "gemini"):
-		return ProviderGemini
-	case strings.HasPrefix(model, "claude"):
-		return ProviderClaude
-	}
-
-	// 3. 默认使用 OpenAI 兼容模式
+	//全都没匹配到就用openai
 	return ProviderOpenAI
 }
 
@@ -102,7 +93,7 @@ func (s *Service) TestConnection(ctx context.Context, apiKey, baseURL, model str
 	tempConfig.BaseURL = &baseURL
 	tempConfig.Model = &model
 
-	providerType := DetectProviderType(baseURL, model)
+	providerType := DetectProviderType(s.config.GetProvider())
 	tempProvider := CreateProvider(providerType, &tempConfig)
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
@@ -131,7 +122,7 @@ func (s *Service) GetModels(ctx context.Context, apiKey string, baseURL string) 
 		tempConfig.APIKey = &apiKey
 		tempConfig.BaseURL = &baseURL
 
-		providerType := DetectProviderType(baseURL, s.config.GetModel())
+		providerType := DetectProviderType(s.config.GetProvider())
 		tempProvider := CreateProvider(providerType, &tempConfig)
 		return tempProvider.GetModels(ctx)
 	}

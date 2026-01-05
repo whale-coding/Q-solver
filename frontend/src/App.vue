@@ -27,15 +27,23 @@
       <div v-else id="content" class="markdown-body">
         <template v-for="(round, idx) in currentRounds" :key="idx">
           <div class="chat-round">
-            <!-- 思维链区域（可折叠） -->
-            <details v-if="round.thinking" class="thinking-block">
-              <summary class="thinking-header">
-                <span class="thinking-icon">💭</span>
-                <span class="thinking-title">思维过程</span>
-                <span class="thinking-hint">点击展开/收起</span>
-              </summary>
-              <div class="thinking-content" v-html="renderMarkdown(round.thinking)"></div>
-            </details>
+            <!-- 思维链区域（Cherry Studio 风格） -->
+            <div v-if="round.thinking" class="thinking-block" :class="{ expanded: round.thinkingExpanded }">
+              <div class="thinking-header" @click="round.thinkingExpanded = !round.thinkingExpanded">
+                <div class="thinking-left">
+                  <span class="thinking-icon">💭</span>
+                  <span class="thinking-title">深度思考</span>
+                  <span class="thinking-duration" v-if="round.thinkingDuration">
+                    {{ formatDuration(round.thinkingDuration) }}
+                  </span>
+                </div>
+                <span class="thinking-toggle">{{ round.thinkingExpanded ? '收起' : '展开' }}</span>
+              </div>
+              <div class="thinking-preview" v-if="!round.thinkingExpanded">
+                <div class="thinking-preview-text">{{ getThinkingPreview(round.thinking) }}</div>
+              </div>
+              <div class="thinking-content" v-else v-html="renderMarkdown(round.thinking)"></div>
+            </div>
             <!-- 正文回复 -->
             <div class="ai-response" v-html="renderMarkdown(round.aiResponse)"></div>
           </div>
@@ -46,6 +54,7 @@
           <div class="thinking-indicator">
             <span class="pulse-dot"></span>
             <span class="text">正在思考中...</span>
+            <span class="thinking-timer">{{ formatDuration(thinkingTimer) }}</span>
           </div>
         </div>
         <!-- 追加加载状态 -->
@@ -215,6 +224,49 @@ const {
   errorState, renderMarkdown, getFullContent, getSummary, getRoundsCount, selectHistory, handleStreamStart, handleStreamChunk, handleThinkingChunk, handleSolution, setStreamBuffer,
   setUserScreenshot, deleteHistory, exportImage
 } = useSolution(settings)
+
+// 思考时间计时器
+const thinkingTimer = ref(0)
+let thinkingTimerInterval = null
+
+watch(isThinking, (val) => {
+  if (val) {
+    thinkingTimer.value = 0
+    thinkingTimerInterval = setInterval(() => {
+      thinkingTimer.value += 0.1
+    }, 100)
+  } else {
+    if (thinkingTimerInterval) {
+      clearInterval(thinkingTimerInterval)
+      thinkingTimerInterval = null
+    }
+  }
+})
+
+// 格式化时长
+function formatDuration(seconds) {
+  if (!seconds || seconds < 0) return ''
+  if (seconds < 60) {
+    return `${seconds.toFixed(1)}s`
+  }
+  const mins = Math.floor(seconds / 60)
+  const secs = (seconds % 60).toFixed(0)
+  return `${mins}m ${secs}s`
+}
+
+// 获取思考预览（前两行）
+function getThinkingPreview(thinking) {
+  if (!thinking) return ''
+  const lines = thinking.split('\n').filter(l => l.trim())
+  const preview = lines.slice(0, 2).join(' ')
+  if (preview.length > 100) {
+    return preview.substring(0, 100) + '...'
+  }
+  if (lines.length > 2) {
+    return preview + '...'
+  }
+  return preview
+}
 
 // Populate callbacks
 
