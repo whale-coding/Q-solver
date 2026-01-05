@@ -254,18 +254,17 @@ function formatDuration(seconds) {
   return `${mins}m ${secs}s`
 }
 
-// 获取思考预览（前两行）
+// 获取思考预览（最后两行，实时滚动）
 function getThinkingPreview(thinking) {
   if (!thinking) return ''
   const lines = thinking.split('\n').filter(l => l.trim())
-  const preview = lines.slice(0, 2).join(' ')
-  if (preview.length > 100) {
-    return preview.substring(0, 100) + '...'
+  // 取最后两行
+  const lastLines = lines.slice(-2)
+  const preview = lastLines.join(' ')
+  if (preview.length > 120) {
+    return '...' + preview.substring(preview.length - 120)
   }
-  if (lines.length > 2) {
-    return preview + '...'
-  }
-  return preview
+  return lines.length > 2 ? '...' + preview : preview
 }
 
 // Populate callbacks
