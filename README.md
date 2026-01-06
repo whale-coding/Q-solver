@@ -17,7 +17,8 @@
     <a href="#🚀-快速开始">安装</a> •
     <a href="#⚙️-配置指南">配置</a> •
     <a href="#⌨️-快捷键">快捷键</a> •
-    <a href="#🛠️-技术栈">开发</a>
+    <a href="#🛠️-技术栈">开发</a> •
+    <a href="README_EN.md">English Docs</a>
   </p>
 </div>
 
