@@ -77,7 +77,7 @@ func (c *LoopbackCapture) Start() error {
 	c.device = device
 	c.running = true
 
-	logger.Println("Loopback 采集已启动 (实时模式)")
+	logger.Println("Loopback 采集已启动")
 	return nil
 }
 

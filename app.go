@@ -477,6 +477,9 @@ func (a *App) liveReceiveLoop(session llm.LiveSession) {
 		// logger.Printf("Live: 收到消息 type=%s", msg.Type)
 
 		switch msg.Type {
+		case llm.LiveInterrupted:
+			logger.Println("检测到打断")
+			a.EmitEvent("live:Interrupted", msg.Text)
 		case llm.LiveMsgTranscript:
 			// logger.Printf("Live: 转录: %s", msg.Text)
 			a.EmitEvent("live:transcript", msg.Text)

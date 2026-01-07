@@ -61,7 +61,7 @@ func (a *GeminiAdapter) ConnectLive(ctx context.Context, cfg *LiveConfig, config
 实时聆听面试语境，并提供即时、高质量的答案或谈话要点，以便我能直接复述给面试官。
 
 # 语言强制要求
-- **输出语言**：无论面试官使用的是何种语言（如英文），你回复给我的所有内容（包括答案、建议、解释）必须严格使用**简体中文**。
+- **输出语言**：无论面试官使用的是何种语言（如英文），无论是你的回复（包括答案、建议、解释），还是你对用户语音的转录识别，必须严格使用**简体中文**。
 
 # 对话规则
 1. **等待提问（至关重要）**：
@@ -133,7 +133,6 @@ func (s *GeminiLiveSession) Receive() (*LiveMessage, error) {
 	if err != nil {
 		return &LiveMessage{Type: LiveMsgError, Text: err.Error()}, err
 	}
-
 	return s.convertMessage(msg), nil
 }
 
@@ -142,7 +141,9 @@ func (s *GeminiLiveSession) convertMessage(msg *genai.LiveServerMessage) *LiveMe
 	if msg == nil {
 		return nil
 	}
-
+	if msg.ServerContent != nil && msg.ServerContent.Interrupted{
+		return  &LiveMessage{Type: LiveInterrupted, Text: "检测到面试官说话(已打断当前回复)"}
+	}
 	// 输入音频转录 (面试官说话的文字)
 	if msg.ServerContent != nil && msg.ServerContent.InputTranscription != nil {
 		text := msg.ServerContent.InputTranscription.Text
@@ -152,7 +153,6 @@ func (s *GeminiLiveSession) convertMessage(msg *genai.LiveServerMessage) *LiveMe
 		}
 	}
 
-	// 输出音频转录 (AI 说话的文字) - 当 ResponseModalities 为 Audio 时
 	if msg.ServerContent != nil && msg.ServerContent.OutputTranscription != nil {
 		text := msg.ServerContent.OutputTranscription.Text
 		if text != "" {

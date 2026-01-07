@@ -1,36 +1,46 @@
 <template>
   <div class="live-view">
-    <!-- 状态栏 -->
-    <div class="status-bar">
-      <div class="status-indicator" :class="statusClass">
-        <span class="status-dot"></span>
-        <span class="status-text">{{ statusText }}</span>
+    <!-- 顶部状态栏 -->
+    <div class="live-header">
+      <div class="header-title">
+        <span class="live-dot" :class="statusClass"></span>
+        <span class="title-text">实时对话</span>
       </div>
+      <div class="header-status">{{ statusText }}</div>
     </div>
 
-    <!-- 聊天消息区域 -->
-    <div class="chat-messages" ref="chatContainer">
+    <!-- 聊天区域 -->
+    <div class="chat-area" ref="chatContainer">
       <!-- 空状态 -->
       <div v-if="messages.length === 0" class="empty-state">
-        <div class="empty-icon">🎙️</div>
-        <div class="empty-text">等待面试开始...</div>
-        <div class="empty-hint">面试官的语音会自动转录显示在左侧</div>
+        <div class="empty-visual">
+          <div class="pulse-ring"></div>
+          <div class="pulse-ring delay"></div>
+          <span class="mic-icon">🎤</span>
+        </div>
+        <div class="empty-title">准备就绪</div>
+        <div class="empty-desc">正在监听面试对话...</div>
       </div>
 
-      <!-- 消息气泡列表 -->
-      <div v-for="msg in messages" :key="msg.id" class="message-row" :class="msg.type">
-        <div class="message-bubble" :class="{ typing: !msg.isComplete }">
-          <div class="message-meta">
-            <span class="message-role">{{ msg.type === 'interviewer' ? '👤 面试官' : '🤖 AI 助手' }}</span>
-            <span class="message-time">{{ formatTime(msg.timestamp) }}</span>
-          </div>
-          <div class="message-text" v-html="msg.type === 'ai' ? renderMarkdown(msg.content) : escapeHtml(msg.content)">
+      <!-- 消息列表 -->
+      <template v-else>
+        <div v-for="msg in messages" :key="msg.id" class="msg-wrapper" :class="msg.type">
+          <div class="msg-card" :class="{ interrupted: msg.interrupted }">
+            <div class="msg-header">
+              <span class="msg-sender">{{ msg.type === 'interviewer' ? '面试官' : 'AI 建议' }}</span>
+              <span v-if="msg.interrupted" class="interrupted-tag">已打断</span>
+              <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
+            </div>
+            <div class="msg-body" v-html="msg.type === 'ai' ? renderMarkdown(msg.content) : escapeHtml(msg.content)">
+            </div>
+            <div v-if="!msg.isComplete" class="typing-dots">
+              <span></span><span></span><span></span>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
 
-      <!-- 底部占位确保最后消息可见 -->
-      <div class="scroll-anchor"></div>
+      <div class="scroll-spacer"></div>
     </div>
   </div>
 </template>
@@ -44,18 +54,14 @@ import { StartLiveSession, StopLiveSession } from '../../wailsjs/go/main/App'
 const status = ref('disconnected')
 const errorMsg = ref('')
 const chatContainer = ref(null)
-
-// 消息列表
 const messages = ref([])
 const currentInterviewerMsg = ref(null)
 const currentAiMsg = ref(null)
 
-// 生成唯一 ID
 function generateId() {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
-// 创建新消息
 function createMessage(type) {
   return {
     id: generateId(),
@@ -66,65 +72,37 @@ function createMessage(type) {
   }
 }
 
-// 格式化时间
 function formatTime(timestamp) {
-  const date = new Date(timestamp)
-  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  return new Date(timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
 }
 
-// HTML 转义
 function escapeHtml(text) {
   if (!text) return ''
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\n/g, '<br>')
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')
 }
 
-// 渲染 Markdown
 function renderMarkdown(text) {
   if (!text) return ''
-  const trimmed = text.replace(/\n+$/, '')
-  return marked.parse(trimmed)
+  return marked.parse(text.replace(/\n+$/, ''))
 }
 
-const statusClass = computed(() => ({
-  'status-disconnected': status.value === 'disconnected',
-  'status-connecting': status.value === 'connecting',
-  'status-connected': status.value === 'connected',
-  'status-error': status.value === 'error',
-}))
-
+const statusClass = computed(() => status.value)
 const statusText = computed(() => {
-  switch (status.value) {
-    case 'disconnected': return '未连接'
-    case 'connecting': return '连接中...'
-    case 'connected': return '已连接'
-    case 'error': return `错误: ${errorMsg.value}`
-    default: return '未知状态'
-  }
+  const map = { disconnected: '等待连接', connecting: '连接中...', connected: '已连接', error: '连接失败' }
+  return map[status.value] || '未知'
 })
 
-// 滚动到底部 - 简化版本，直接滚动
 function scrollToBottom() {
   setTimeout(() => {
     if (chatContainer.value) {
       chatContainer.value.scrollTop = chatContainer.value.scrollHeight
     }
-  }, 10)
+  }, 20)
 }
 
-// 监听消息变化自动滚动
-watch(messages, () => {
-  scrollToBottom()
-}, { deep: true })
+watch(messages, scrollToBottom, { deep: true })
 
-// 事件监听
-function onLiveStatus(newStatus) {
-  status.value = newStatus
-}
-
+function onLiveStatus(s) { status.value = s }
 function onLiveTranscript(text) {
   if (!currentInterviewerMsg.value) {
     currentInterviewerMsg.value = createMessage('interviewer')
@@ -132,14 +110,12 @@ function onLiveTranscript(text) {
   }
   currentInterviewerMsg.value.content += text
 }
-
 function onLiveInterviewerDone() {
   if (currentInterviewerMsg.value) {
     currentInterviewerMsg.value.isComplete = true
     currentInterviewerMsg.value = null
   }
 }
-
 function onLiveAiText(text) {
   if (!currentAiMsg.value) {
     currentAiMsg.value = createMessage('ai')
@@ -147,15 +123,18 @@ function onLiveAiText(text) {
   }
   currentAiMsg.value.content += text
 }
-
-function onLiveError(err) {
-  status.value = 'error'
-  errorMsg.value = err
-}
-
+function onLiveError(err) { status.value = 'error'; errorMsg.value = err }
 function onLiveDone() {
   if (currentAiMsg.value) {
     currentAiMsg.value.isComplete = true
+    currentAiMsg.value = null
+  }
+}
+function onLiveInterrupted(text) {
+  // AI 回复被打断，标记当前 AI 消息为已打断
+  if (currentAiMsg.value) {
+    currentAiMsg.value.isComplete = true
+    currentAiMsg.value.interrupted = true
     currentAiMsg.value = null
   }
 }
@@ -167,6 +146,7 @@ onMounted(() => {
   EventsOn('live:ai-text', onLiveAiText)
   EventsOn('live:error', onLiveError)
   EventsOn('live:done', onLiveDone)
+  EventsOn('live:Interrupted', onLiveInterrupted)
   StartLiveSession()
 })
 
@@ -178,78 +158,61 @@ onUnmounted(() => {
   EventsOff('live:ai-text')
   EventsOff('live:error')
   EventsOff('live:done')
+  EventsOff('live:Interrupted')
 })
 </script>
 
 <style scoped>
+/* ===== 基础布局 ===== */
 .live-view {
   display: flex;
   flex-direction: column;
   height: 100%;
   pointer-events: auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* 状态栏 */
-.status-bar {
-  flex-shrink: 0;
-  padding: 10px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.status-indicator {
-  display: inline-flex;
+/* ===== 顶部栏 ===== */
+.live-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 500;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.status-dot {
-  width: 6px;
-  height: 6px;
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
+  transition: all 0.3s;
 }
 
-.status-disconnected {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+.live-dot.disconnected {
+  background: #6b7280;
 }
 
-.status-disconnected .status-dot {
-  background: #f87171;
+.live-dot.connecting {
+  background: #f59e0b;
+  animation: blink 1s infinite;
 }
 
-.status-connecting {
-  background: rgba(251, 191, 36, 0.15);
-  color: #fbbf24;
+.live-dot.connected {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
 }
 
-.status-connecting .status-dot {
-  background: #fbbf24;
-  animation: pulse 1s infinite;
+.live-dot.error {
+  background: #ef4444;
 }
 
-.status-connected {
-  background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
-}
-
-.status-connected .status-dot {
-  background: #22c55e;
-}
-
-.status-error {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-}
-
-.status-error .status-dot {
-  background: #f87171;
-}
-
-@keyframes pulse {
+@keyframes blink {
 
   0%,
   100% {
@@ -257,85 +220,133 @@ onUnmounted(() => {
   }
 
   50% {
-    opacity: 0.4;
+    opacity: 0.3;
   }
 }
 
-/* 聊天区域 */
-.chat-messages {
+.title-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.3px;
+}
+
+.header-status {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ===== 聊天区域 ===== */
+.chat-area {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 12px 16px;
+  padding: 16px 20px 60px 20px;
+  /* 底部增加更多 padding */
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   min-height: 0;
   pointer-events: auto;
 }
 
-.chat-messages::-webkit-scrollbar {
+.chat-area::-webkit-scrollbar {
   width: 4px;
 }
 
-.chat-messages::-webkit-scrollbar-track {
+.chat-area::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.chat-messages::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+.chat-area::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 2px;
 }
 
-.scroll-anchor {
-  height: 20px;
+.scroll-spacer {
+  height: 40px;
+  /* 增大底部空白 */
   flex-shrink: 0;
 }
 
-/* 空状态 */
+/* ===== 空状态 ===== */
 .empty-state {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 16px;
+}
+
+.empty-visual {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pulse-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid rgba(16, 185, 129, 0.3);
+  border-radius: 50%;
+  animation: pulse-out 2s ease-out infinite;
+}
+
+.pulse-ring.delay {
+  animation-delay: 1s;
+}
+
+@keyframes pulse-out {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.mic-icon {
+  font-size: 28px;
+  z-index: 1;
+}
+
+.empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.empty-desc {
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.4);
 }
 
-.empty-icon {
-  font-size: 40px;
-  opacity: 0.5;
-}
-
-.empty-text {
-  font-size: 15px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.empty-hint {
-  font-size: 12px;
-}
-
-/* 消息行 */
-.message-row {
+/* ===== 消息卡片 ===== */
+.msg-wrapper {
   display: flex;
-  animation: slideIn 0.2s ease-out;
+  animation: fadeSlide 0.25s ease-out;
 }
 
-.message-row.interviewer {
+.msg-wrapper.interviewer {
   justify-content: flex-start;
 }
 
-.message-row.ai {
+.msg-wrapper.ai {
   justify-content: flex-end;
 }
 
-@keyframes slideIn {
+@keyframes fadeSlide {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
 
   to {
@@ -344,96 +355,149 @@ onUnmounted(() => {
   }
 }
 
-/* 消息气泡 */
-.message-bubble {
-  max-width: 85%;
-  padding: 10px 14px;
-  border-radius: 16px;
-  position: relative;
+.msg-card {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 12px;
 }
 
-.interviewer .message-bubble {
-  background: rgba(55, 55, 65, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px 16px 16px 4px;
+/* 面试官消息 - 优雅的蓝灰渐变 */
+.interviewer .msg-card {
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.95) 0%, rgba(45, 55, 72, 0.9) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-left: 3px solid rgba(148, 163, 184, 0.4);
+  border-radius: 2px 12px 12px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.ai .message-bubble {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(139, 92, 246, 0.9) 100%);
-  border-radius: 16px 16px 4px 16px;
+/* AI 消息 - 柔和的品牌色 */
+.ai .msg-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(6, 182, 212, 0.12) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-right: 3px solid rgba(16, 185, 129, 0.5);
+  border-radius: 12px 2px 12px 12px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
 }
 
-.message-bubble.typing {
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
-}
-
-/* 消息元信息 */
-.message-meta {
+.msg-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  justify-content: space-between;
+  margin-bottom: 6px;
 }
 
-.message-role {
+.msg-sender {
   font-size: 11px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.ai .message-role {
-  color: rgba(255, 255, 255, 0.9);
+.interviewer .msg-sender {
+  color: rgba(148, 163, 184, 0.9);
 }
 
-.message-time {
+.ai .msg-sender {
+  color: rgba(16, 185, 129, 0.95);
+}
+
+.msg-time {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.3);
+  margin-left: auto;
 }
 
-/* 消息文本 */
-.message-text {
+/* 打断标签 */
+.interrupted-tag {
+  font-size: 9px;
+  font-weight: 600;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+
+/* 被打断的消息卡片 */
+.msg-card.interrupted {
+  opacity: 0.85;
+  border-style: dashed;
+}
+
+.msg-body {
   font-size: 14px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.95);
-  word-wrap: break-word;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.92);
 }
 
-.message-text :deep(p) {
+.msg-body :deep(p) {
   margin: 0 0 6px 0;
 }
 
-.message-text :deep(p:last-child) {
+.msg-body :deep(p:last-child) {
   margin-bottom: 0;
 }
 
-.message-text :deep(code) {
-  background: rgba(0, 0, 0, 0.25);
-  padding: 1px 5px;
+.msg-body :deep(code) {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 6px;
   border-radius: 4px;
-  font-family: 'Consolas', 'Monaco', monospace;
   font-size: 13px;
+  font-family: 'SF Mono', Consolas, monospace;
 }
 
-.message-text :deep(pre) {
-  background: rgba(0, 0, 0, 0.3);
+.msg-body :deep(pre) {
+  background: rgba(0, 0, 0, 0.25);
   padding: 10px;
-  border-radius: 8px;
-  overflow-x: auto;
+  border-radius: 6px;
   margin: 6px 0;
+  overflow-x: auto;
 }
 
-.message-text :deep(pre code) {
+.msg-body :deep(pre code) {
   background: none;
   padding: 0;
 }
 
-.message-text :deep(ul),
-.message-text :deep(ol) {
-  margin: 4px 0;
-  padding-left: 20px;
+/* 打字指示器 */
+.typing-dots {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
 }
 
-.message-text :deep(li) {
-  margin: 2px 0;
+.typing-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  animation: dotPulse 1.2s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes dotPulse {
+
+  0%,
+  60%,
+  100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+
+  30% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
 }
 </style>

@@ -144,6 +144,7 @@ const (
 	LiveMsgToolCall        LiveMessageType = "tool_call"        // 工具调用请求
 	LiveMsgDone            LiveMessageType = "done"             // 对话轮完成
 	LiveMsgError           LiveMessageType = "error"            // 错误
+	LiveInterrupted        LiveMessageType = "interrupted"      // 打断
 )
 
 // LiveMessage 实时消息
