@@ -422,6 +422,7 @@ func (a *App) StartLiveSession() error {
 	liveCfg := llm.GetLiveConfig(&cfg)
 	session, err := liveProvider.ConnectLive(a.ctx, liveCfg, a.configManager.GetPtr())
 	if err != nil {
+		logger.Println("liveApi连接服务器失败",err)
 		a.EmitEvent("live:status", "error")
 		a.EmitEvent("live:error", err.Error())
 		return err

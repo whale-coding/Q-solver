@@ -14,6 +14,16 @@
       </div>
     </div>
 
+    <!-- 错误提示 -->
+    <div v-if="status === 'error' && errorMsg" class="error-banner">
+      <span class="error-icon">⚠️</span>
+      <div class="error-content">
+        <div class="error-title">连接失败</div>
+        <div class="error-message">{{ errorMsg }}</div>
+      </div>
+      <button class="retry-btn" @click="retryConnection">重试</button>
+    </div>
+
     <!-- 聊天区域 -->
     <div class="chat-area" ref="chatContainer">
       <!-- 空状态 -->
@@ -142,6 +152,13 @@ function onLiveDone() {
     currentAiMsg.value.isComplete = true
     currentAiMsg.value = null
   }
+}
+
+function retryConnection() {
+  errorMsg.value = ''
+  status.value = 'connecting'
+  StopLiveSession()
+  StartLiveSession()
 }
 function onLiveInterrupted(text) {
   // AI 回复被打断，标记当前 AI 消息为已打断
@@ -302,6 +319,75 @@ onUnmounted(() => {
 .header-status.error .status-dot {
   background: #ef4444;
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+/* ===== 错误提示 ===== */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 16px 12px 16px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.1));
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.error-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.error-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fca5a5;
+  margin-bottom: 4px;
+}
+
+.error-message {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.retry-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.2));
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retry-btn:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.4), rgba(239, 68, 68, 0.3));
+  border-color: rgba(239, 68, 68, 0.6);
+  transform: translateY(-1px);
 }
 
 @keyframes pulse {

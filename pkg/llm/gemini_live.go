@@ -72,7 +72,6 @@ func (a *GeminiAdapter) ConnectLive(ctx context.Context, cfg *LiveConfig, config
 		logger.Printf("LiveAPI: 连接到模型 %s 发生错误", err)
 		return nil, err
 	}
-	logger.Printf("LiveAPI: 连接到模型 %s", model)
 	return &GeminiLiveSession{session: session}, nil
 }
 
