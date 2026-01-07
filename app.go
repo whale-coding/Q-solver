@@ -105,6 +105,17 @@ func (a *App) onConfigChanged(cfg config.Config) {
 		a.solver.ClearHistory()
 	}
 
+	// 如果 Live Session 正在运行，则重连
+	if a.liveSession != nil {
+		logger.Println("配置变更，重连 Live Session...")
+		a.StopLiveSession()
+		go func() {
+			if err := a.StartLiveSession(); err != nil {
+				logger.Printf("Live Session 重连失败: %v", err)
+			}
+		}()
+	}
+
 	logger.Println("配置已更新并应用")
 }
 
