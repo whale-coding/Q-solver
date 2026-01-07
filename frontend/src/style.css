@@ -806,11 +806,12 @@ body {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: transparent;
+    /* 完全透明，背景不变 */
     align-items: center;
     justify-content: center;
     pointer-events: auto;
-    backdrop-filter: blur(8px);
+    /* 不使用 backdrop-filter，保持背景原样 */
 }
 
 .modal-content {
