@@ -3,10 +3,15 @@
     <!-- 顶部状态栏 -->
     <div class="live-header">
       <div class="header-title">
-        <span class="live-dot" :class="statusClass"></span>
-        <span class="title-text">实时对话</span>
+        <div class="audio-bars" :class="{ active: status === 'connected' }">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="title-text">实时助手</span>
       </div>
-      <div class="header-status">{{ statusText }}</div>
+      <div class="header-status" :class="statusClass">
+        <span class="status-dot"></span>
+        <span>{{ statusText }}</span>
+      </div>
     </div>
 
     <!-- 聊天区域 -->
@@ -14,12 +19,15 @@
       <!-- 空状态 -->
       <div v-if="messages.length === 0" class="empty-state">
         <div class="empty-visual">
-          <div class="pulse-ring"></div>
-          <div class="pulse-ring delay"></div>
-          <span class="mic-icon">🎤</span>
+          <div class="wave-container">
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+          </div>
+          <span class="mic-icon">🎙️</span>
         </div>
         <div class="empty-title">准备就绪</div>
-        <div class="empty-desc">正在监听面试对话...</div>
+        <div class="empty-desc">开始说话，AI 将实时响应</div>
       </div>
 
       <!-- 消息列表 -->
@@ -27,9 +35,14 @@
         <div v-for="msg in messages" :key="msg.id" class="msg-wrapper" :class="msg.type">
           <div class="msg-card" :class="{ interrupted: msg.interrupted }">
             <div class="msg-header">
-              <span class="msg-sender">{{ msg.type === 'interviewer' ? '面试官' : 'AI 建议' }}</span>
-              <span v-if="msg.interrupted" class="interrupted-tag">已打断</span>
-              <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
+              <div class="sender-info">
+                <span class="avatar" :class="msg.type">{{ msg.type === 'interviewer' ? 'Q' : 'A' }}</span>
+                <span class="msg-sender">{{ msg.type === 'interviewer' ? '语音' : 'AI' }}</span>
+              </div>
+              <div class="header-right">
+                <span v-if="msg.interrupted" class="interrupted-tag">已中断</span>
+                <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
+              </div>
             </div>
             <div class="msg-body" v-html="msg.type === 'ai' ? renderMarkdown(msg.content) : escapeHtml(msg.content)">
             </div>
@@ -177,63 +190,132 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 12px 20px;
+  position: relative;
+}
+
+/* 底部渐变分隔线 - 优雅的中间渐变效果 */
+.live-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 24px;
+  right: 24px;
+  height: 1px;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(16, 185, 129, 0.35) 30%,
+      rgba(16, 185, 129, 0.35) 70%,
+      transparent 100%);
 }
 
 .header-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.live-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  transition: all 0.3s;
+/* 音频条动画 */
+.audio-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 16px;
 }
 
-.live-dot.disconnected {
-  background: #6b7280;
+.audio-bars span {
+  width: 3px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  transition: all 0.3s ease;
 }
 
-.live-dot.connecting {
-  background: #f59e0b;
-  animation: blink 1s infinite;
+.audio-bars.active span {
+  background: linear-gradient(180deg, #10b981 0%, #34d399 100%);
+  animation: audioWave 0.8s ease-in-out infinite;
 }
 
-.live-dot.connected {
-  background: #10b981;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+.audio-bars.active span:nth-child(1) {
+  animation-delay: 0s;
 }
 
-.live-dot.error {
-  background: #ef4444;
+.audio-bars.active span:nth-child(2) {
+  animation-delay: 0.2s;
 }
 
-@keyframes blink {
+.audio-bars.active span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes audioWave {
 
   0%,
   100% {
-    opacity: 1;
+    height: 4px;
   }
 
   50% {
-    opacity: 0.3;
+    height: 14px;
   }
 }
 
 .title-text {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
 }
 
 .header-status {
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.45);
+  transition: color 0.3s ease;
+}
+
+.status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transition: all 0.4s ease;
+}
+
+.header-status.connecting .status-dot {
+  background: #fbbf24;
+  box-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
+  animation: pulse 1.2s infinite;
+}
+
+.header-status.connected {
+  color: rgba(16, 185, 129, 0.75);
+}
+
+.header-status.connected .status-dot {
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+
+.header-status.error .status-dot {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
 }
 
 /* ===== 聊天区域 ===== */
@@ -241,17 +323,16 @@ onUnmounted(() => {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px 20px 60px 20px;
-  /* 底部增加更多 padding */
+  padding: 20px 24px 80px 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   min-height: 0;
   pointer-events: auto;
 }
 
 .chat-area::-webkit-scrollbar {
-  width: 4px;
+  width: 5px;
 }
 
 .chat-area::-webkit-scrollbar-track {
@@ -259,13 +340,17 @@ onUnmounted(() => {
 }
 
 .chat-area::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  transition: background 0.3s;
+}
+
+.chat-area:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .scroll-spacer {
   height: 40px;
-  /* 增大底部空白 */
   flex-shrink: 0;
 }
 
@@ -276,63 +361,75 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 20px;
 }
 
 .empty-visual {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.pulse-ring {
+.wave-container {
   position: absolute;
   width: 100%;
   height: 100%;
-  border: 2px solid rgba(16, 185, 129, 0.3);
+}
+
+.wave {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid rgba(16, 185, 129, 0.2);
   border-radius: 50%;
-  animation: pulse-out 2s ease-out infinite;
+  animation: waveExpand 2.5s ease-out infinite;
 }
 
-.pulse-ring.delay {
-  animation-delay: 1s;
+.wave:nth-child(2) {
+  animation-delay: 0.8s;
 }
 
-@keyframes pulse-out {
+.wave:nth-child(3) {
+  animation-delay: 1.6s;
+}
+
+@keyframes waveExpand {
   0% {
     transform: scale(0.5);
-    opacity: 1;
+    opacity: 0.8;
   }
 
   100% {
-    transform: scale(1.5);
+    transform: scale(1.4);
     opacity: 0;
   }
 }
 
 .mic-icon {
-  font-size: 28px;
+  font-size: 32px;
   z-index: 1;
+  filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.3));
 }
 
 .empty-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.3px;
 }
 
 .empty-desc {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.45);
 }
 
 /* ===== 消息卡片 ===== */
 .msg-wrapper {
   display: flex;
-  animation: fadeSlide 0.25s ease-out;
+  animation: slideIn 0.3s ease-out;
 }
 
 .msg-wrapper.interviewer {
@@ -343,10 +440,10 @@ onUnmounted(() => {
   justify-content: flex-end;
 }
 
-@keyframes fadeSlide {
+@keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(10px);
   }
 
   to {
@@ -356,82 +453,120 @@ onUnmounted(() => {
 }
 
 .msg-card {
-  max-width: 80%;
-  padding: 12px 16px;
-  border-radius: 12px;
+  max-width: 85%;
+  padding: 14px 18px;
+  border-radius: 18px;
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
 }
 
-/* 面试官消息 - 优雅的蓝灰渐变 */
+/* 语音消息 - Q */
 .interviewer .msg-card {
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.95) 0%, rgba(45, 55, 72, 0.9) 100%);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-left: 3px solid rgba(148, 163, 184, 0.4);
-  border-radius: 2px 12px 12px 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, rgba(70, 80, 100, 0.7) 0%, rgba(55, 65, 85, 0.65) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid rgba(139, 92, 246, 0.6);
+  border-radius: 4px 18px 18px 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
-/* AI 消息 - 柔和的品牌色 */
+/* AI 消息 - A */
 .ai .msg-card {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(6, 182, 212, 0.12) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  border-right: 3px solid rgba(16, 185, 129, 0.5);
-  border-radius: 12px 2px 12px 12px;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.15) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-right: 3px solid rgba(16, 185, 129, 0.6);
+  border-radius: 18px 4px 18px 18px;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.1);
 }
 
 .msg-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+.sender-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 头像样式 */
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.avatar.interviewer {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.35);
+}
+
+.avatar.ai {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
 }
 
 .msg-sender {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 
 .interviewer .msg-sender {
-  color: rgba(148, 163, 184, 0.9);
+  color: rgba(167, 139, 250, 0.95);
 }
 
 .ai .msg-sender {
-  color: rgba(16, 185, 129, 0.95);
+  color: rgba(52, 211, 153, 0.95);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .msg-time {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.3);
-  margin-left: auto;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
 }
 
 /* 打断标签 */
 .interrupted-tag {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.15);
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-left: 6px;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.15);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(251, 191, 36, 0.25);
 }
 
 /* 被打断的消息卡片 */
 .msg-card.interrupted {
-  opacity: 0.85;
+  opacity: 0.75;
   border-style: dashed;
 }
 
 .msg-body {
   font-size: 14px;
-  line-height: 1.55;
-  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .msg-body :deep(p) {
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
 }
 
 .msg-body :deep(p:last-child) {
@@ -439,39 +574,44 @@ onUnmounted(() => {
 }
 
 .msg-body :deep(code) {
-  background: rgba(0, 0, 0, 0.2);
-  padding: 2px 6px;
-  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 2px 7px;
+  border-radius: 5px;
   font-size: 13px;
   font-family: 'SF Mono', Consolas, monospace;
+  color: #a5f3fc;
 }
 
 .msg-body :deep(pre) {
-  background: rgba(0, 0, 0, 0.25);
-  padding: 10px;
-  border-radius: 6px;
-  margin: 6px 0;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 12px;
+  border-radius: 10px;
+  margin: 8px 0;
   overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .msg-body :deep(pre code) {
   background: none;
   padding: 0;
+  color: #e2e8f0;
 }
 
 /* 打字指示器 */
 .typing-dots {
   display: flex;
-  gap: 4px;
-  margin-top: 8px;
+  gap: 5px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .typing-dots span {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.4);
-  animation: dotPulse 1.2s infinite ease-in-out;
+  animation: bounce 1.4s infinite ease-in-out;
 }
 
 .typing-dots span:nth-child(1) {
@@ -486,17 +626,17 @@ onUnmounted(() => {
   animation-delay: 0.3s;
 }
 
-@keyframes dotPulse {
+@keyframes bounce {
 
   0%,
   60%,
   100% {
-    transform: scale(1);
+    transform: translateY(0);
     opacity: 0.4;
   }
 
   30% {
-    transform: scale(1.3);
+    transform: translateY(-6px);
     opacity: 1;
   }
 }

@@ -138,6 +138,10 @@ func copyNonNilFields(src, dst *Config, checkEnv bool) {
 		}
 		maps.Copy(dst.Shortcuts, src.Shortcuts)
 	}
+	if src.UseLiveApi != nil {
+		dst.UseLiveApi = src.UseLiveApi
+
+	}
 }
 
 func (cm *ConfigManager) mergeConfig(src *Config) {
