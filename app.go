@@ -1,8 +1,8 @@
 package main
 
 import (
-	"Q-Solver/pkg/audio"
 	"Q-Solver/pkg/config"
+	"Q-Solver/pkg/live"
 	"Q-Solver/pkg/llm"
 	"Q-Solver/pkg/logger"
 	"Q-Solver/pkg/resume"
@@ -15,8 +15,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"os"
-	"strings"
-	"sync"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -36,11 +34,7 @@ type App struct {
 	shortcutService *shortcut.Service
 	screenService   *screen.Service
 	solver          *solution.Solver
-
-	// Live API
-	liveSession  llm.LiveSession
-	audioCapture *audio.LoopbackCapture
-	liveMu       sync.Mutex // 保护 Live Session 并发访问
+	liveManager     *live.LiveSessionManager
 }
 
 // NewApp 创建 App 实例
@@ -92,6 +86,15 @@ func (a *App) Startup(ctx context.Context) {
 	a.configManager.Subscribe(a.onConfigChanged)
 	logger.Println("配置变更订阅已注册")
 
+	// 初始化 Live Session 管理器
+	a.liveManager = live.NewLiveSessionManager(
+		ctx,
+		a.llmService,
+		a.configManager,
+		a.screenService,
+		a.EmitEvent,
+	)
+
 	// 直接设置为就绪状态
 	a.stateManager.UpdateInitStatus(state.StatusReady)
 }
@@ -109,14 +112,14 @@ func (a *App) onConfigChanged(NewConfig config.Config, oldConfig config.Config) 
 	}
 
 	if NewConfig.UseLiveApi != oldConfig.UseLiveApi {
-		if NewConfig.UseLiveApi == true && a.liveSession != nil {
+		if NewConfig.UseLiveApi == true && a.liveManager.IsActive() {
 			logger.Println("配置变更，重连 Live Session...")
 			a.StopLiveSession()
 			if err := a.StartLiveSession(); err != nil {
 				logger.Printf("Live Session 重连失败: %v", err)
 			}
 		}
-		if NewConfig.UseLiveApi == false && a.liveSession != nil {
+		if NewConfig.UseLiveApi == false && a.liveManager.IsActive() {
 			a.StopLiveSession()
 		}
 	}
@@ -422,166 +425,10 @@ func (a *App) SaveImageToFile(base64Data string) (bool, error) {
 
 // StartLiveSession 启动 Live API 会话
 func (a *App) StartLiveSession() error {
-	a.liveMu.Lock()
-	defer a.liveMu.Unlock()
-
-	cfg := a.configManager.Get()
-
-	// 检查 Provider 是否支持 Live
-	provider := a.llmService.GetProvider()
-	liveProvider, ok := provider.(llm.LiveProvider)
-	if !ok {
-		a.EmitEvent("live:error", "当前模型不支持 Live API")
-		return nil
-	}
-
-	a.EmitEvent("live:status", "connecting")
-
-	// 连接 Live Session
-	liveCfg := llm.GetLiveConfig(cfg)
-	session, err := liveProvider.ConnectLive(a.ctx, liveCfg)
-	if err != nil {
-		logger.Println("liveApi连接服务器失败", err)
-		a.EmitEvent("live:status", "error")
-		a.EmitEvent("live:error", err.Error())
-		return err
-	}
-
-	a.liveSession = session
-	a.EmitEvent("live:status", "connected")
-
-	// 初始化音频采集
-	a.audioCapture, err = audio.NewLoopbackCapture(func(data []byte) {
-		if a.liveSession != nil {
-			_ = a.liveSession.SendAudio(data)
-		}
-	})
-	if err != nil {
-		logger.Printf("音频采集初始化失败: %v", err)
-		a.EmitEvent("live:error", "音频采集初始化失败: "+err.Error())
-	} else {
-		if err := a.audioCapture.Start(); err != nil {
-			logger.Printf("音频采集启动失败: %v", err)
-		}
-	}
-
-	// 启动接收协程
-	go a.liveReceiveLoop(session)
-
-	return nil
+	return a.liveManager.Start()
 }
 
 // StopLiveSession 停止 Live API 会话
 func (a *App) StopLiveSession() {
-	a.liveMu.Lock()
-	defer a.liveMu.Unlock()
-
-	logger.Println("Live: StopLiveSession 调用")
-	if a.audioCapture != nil {
-		logger.Println("Live: 停止音频采集")
-		a.audioCapture.Close()
-		a.audioCapture = nil
-	}
-	if a.liveSession != nil {
-		logger.Println("Live: 关闭会话")
-		a.liveSession.Close()
-		a.liveSession = nil
-	}
-	a.EmitEvent("live:status", "disconnected")
-}
-
-// liveReceiveLoop 接收 Live 消息的循环
-func (a *App) liveReceiveLoop(session llm.LiveSession) {
-	logger.Println("Live: 接收循环已启动")
-	defer func() {
-		logger.Println("Live: 接收循环结束")
-		session.Close()
-	}()
-
-	for {
-		msg, err := session.Receive()
-		if err != nil {
-			logger.Printf("Live: 接收错误: %v", err)
-			a.EmitEvent("live:status", "disconnected")
-			a.EmitEvent("live:error", err.Error())
-			return
-		}
-		if msg == nil {
-			continue
-		}
-
-		// logger.Printf("Live: 收到消息 type=%s", msg.Type)
-
-		switch msg.Type {
-		case llm.LiveInterrupted:
-			logger.Println("检测到打断")
-			a.EmitEvent("live:Interrupted", msg.Text)
-		case llm.LiveMsgTranscript:
-			// logger.Printf("Live: 转录: %s", msg.Text)
-			a.EmitEvent("live:transcript", msg.Text)
-		case llm.LiveMsgInterviewerDone:
-			logger.Println("Live: 面试官说话结束")
-			a.EmitEvent("live:interviewer-done")
-		case llm.LiveMsgAIText:
-			// logger.Printf("Live: AI回复: %s", msg.Text)
-			a.EmitEvent("live:ai-text", msg.Text)
-		case llm.LiveMsgToolCall:
-			logger.Printf("Live: 工具调用 %s (ID=%s)", msg.ToolName, msg.ToolID)
-			if msg.ToolName == "get_screenshot" {
-				a.handleLiveScreenshot(session, msg.ToolID)
-			}
-		case llm.LiveMsgDone:
-			logger.Println("Live: 对话轮完成")
-			a.EmitEvent("live:done")
-		case llm.LiveMsgError:
-			logger.Printf("Live: 错误: %s", msg.Text)
-			a.EmitEvent("live:error", msg.Text)
-		}
-	}
-}
-
-// handleLiveScreenshot 处理 Live API 的截图请求
-func (a *App) handleLiveScreenshot(session llm.LiveSession, toolID string) {
-	cfg := a.configManager.Get()
-
-	preview, err := a.GetScreenshotPreview(
-		cfg.CompressionQuality,
-		cfg.Sharpening,
-		cfg.Grayscale,
-		cfg.NoCompression,
-		cfg.ScreenshotMode,
-	)
-	if err != nil {
-		logger.Printf("Live 截图失败: %v", err)
-		_ = session.SendToolResponse(toolID, "截图失败: "+err.Error())
-		return
-	}
-
-	// 解析 data URL 格式: data:image/jpeg;base64,xxxxx
-	base64Str := preview.Base64
-	mimeType := "image/jpeg" // 默认
-
-	if strings.HasPrefix(base64Str, "data:") {
-		// 提取 MIME 类型
-		if idx := strings.Index(base64Str, ";base64,"); idx > 5 {
-			mimeType = base64Str[5:idx]   // 提取 "image/jpeg" 或 "image/png"
-			base64Str = base64Str[idx+8:] // 去掉前缀，保留纯 base64
-		}
-	}
-
-	// 解码 Base64 为原始图片数据
-	imageData, err := base64.StdEncoding.DecodeString(base64Str)
-	if err != nil {
-		logger.Printf("Live Base64解码失败: %v", err)
-		_ = session.SendToolResponse(toolID, "图片解码失败")
-		return
-	}
-
-	// 发送图片数据给模型
-	err = session.SendToolResponseWithImage(toolID, imageData, mimeType)
-	if err != nil {
-		logger.Printf("Live 发送截图失败: %v", err)
-	} else {
-		logger.Printf("Live: 已发送屏幕截图给模型 (%d bytes, %s)", len(imageData), mimeType)
-	}
+	a.liveManager.Stop()
 }

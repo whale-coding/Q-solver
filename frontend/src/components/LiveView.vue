@@ -24,46 +24,99 @@
       <button class="retry-btn" @click="retryConnection">重试</button>
     </div>
 
-    <!-- 聊天区域 -->
-    <div class="chat-area" ref="chatContainer">
-      <!-- 空状态 -->
-      <div v-if="messages.length === 0" class="empty-state">
-        <div class="empty-visual">
-          <div class="wave-container">
-            <div class="wave"></div>
-            <div class="wave"></div>
-            <div class="wave"></div>
+    <!-- 主内容区 - 双栏布局 -->
+    <div class="main-content">
+      <!-- 左侧：对话区 -->
+      <div class="chat-column">
+        <div class="chat-area" ref="chatContainer">
+          <!-- 空状态 -->
+          <div v-if="messages.length === 0" class="empty-state">
+            <div class="empty-visual">
+              <div class="wave-container">
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+              </div>
+              <span class="mic-icon">🎙️</span>
+            </div>
+            <div class="empty-title">准备就绪</div>
+            <div class="empty-desc">开始说话，AI 将实时响应</div>
           </div>
-          <span class="mic-icon">🎙️</span>
+
+          <!-- 消息列表 -->
+          <template v-else>
+            <div v-for="msg in messages" :key="msg.id" class="msg-wrapper" :class="msg.type">
+              <div class="msg-card" :class="{ interrupted: msg.interrupted }">
+                <div class="msg-header">
+                  <div class="sender-info">
+                    <span class="avatar" :class="msg.type">{{ msg.type === 'interviewer' ? 'Q' : 'A' }}</span>
+                    <span class="msg-sender">{{ msg.type === 'interviewer' ? '语音' : 'AI' }}</span>
+                  </div>
+                  <div class="header-right">
+                    <span v-if="msg.interrupted" class="interrupted-tag">已中断</span>
+                    <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
+                  </div>
+                </div>
+                <div class="msg-body"
+                  v-html="msg.type === 'ai' ? renderMarkdown(msg.content) : escapeHtml(msg.content)">
+                </div>
+                <div v-if="!msg.isComplete" class="typing-dots">
+                  <span></span><span></span><span></span>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <div class="scroll-spacer"></div>
         </div>
-        <div class="empty-title">准备就绪</div>
-        <div class="empty-desc">开始说话，AI 将实时响应</div>
       </div>
 
-      <!-- 消息列表 -->
-      <template v-else>
-        <div v-for="msg in messages" :key="msg.id" class="msg-wrapper" :class="msg.type">
-          <div class="msg-card" :class="{ interrupted: msg.interrupted }">
-            <div class="msg-header">
-              <div class="sender-info">
-                <span class="avatar" :class="msg.type">{{ msg.type === 'interviewer' ? 'Q' : 'A' }}</span>
-                <span class="msg-sender">{{ msg.type === 'interviewer' ? '语音' : 'AI' }}</span>
-              </div>
-              <div class="header-right">
-                <span v-if="msg.interrupted" class="interrupted-tag">已中断</span>
-                <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
-              </div>
-            </div>
-            <div class="msg-body" v-html="msg.type === 'ai' ? renderMarkdown(msg.content) : escapeHtml(msg.content)">
-            </div>
-            <div v-if="!msg.isComplete" class="typing-dots">
-              <span></span><span></span><span></span>
+      <!-- 右侧：信息面板 -->
+      <div class="info-panel">
+        <!-- 连接状态提醒 -->
+        <div class="panel-section connection-reminder" :class="{ warning: connectionWarning }">
+          <div class="section-title">
+            <span class="icon">⏱️</span>
+            <span>连接状态</span>
+          </div>
+          <div class="connection-info">
+            <div class="connection-status">
+              <span class="status-text">{{ connectionWarning ? '警告：连接即将超时' : '连接正常' }}</span>
+              <span class="status-hint">{{ connectionWarning ? '请准备手动切换连接' : '最长10分钟自动切换' }}</span>
             </div>
           </div>
         </div>
-      </template>
 
-      <div class="scroll-spacer"></div>
+        <!-- 对话统计 -->
+        <div class="panel-section stats">
+          <div class="section-title">
+            <span class="icon">📊</span>
+            <span>对话统计</span>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <span class="stat-value">{{ conversationTurns }}</span>
+              <span class="stat-label">对话轮</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ sessionDuration }}</span>
+              <span class="stat-label">会话时长</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 关键话题 -->
+        <div class="panel-section keywords">
+          <div class="section-title">
+            <span class="icon">🏷️</span>
+            <span>关键话题</span>
+          </div>
+          <div class="keyword-tags">
+            <span v-if="topKeywords.length === 0" class="empty-hint">对话中会自动提取</span>
+            <span v-for="tag in topKeywords" :key="tag" class="tag">{{ tag }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -80,6 +133,19 @@ const chatContainer = ref(null)
 const messages = ref([])
 const currentInterviewerMsg = ref(null)
 const currentAiMsg = ref(null)
+
+// 右侧面板数据
+const sessionStartTime = ref(Date.now())
+const sessionDuration = ref('0m  0s')
+const topKeywords = ref([])
+
+// 连接状态（由后端事件触发）
+const connectionWarning = ref(false)
+
+// 对话统计
+const conversationTurns = computed(() => {
+  return messages.value.filter(m => m.type === 'ai').length
+})
 
 function generateId() {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -198,6 +264,63 @@ function onLiveInterrupted(text) {
   }
 }
 
+// 连接切换事件（后端触发）
+function onLiveConnectionSwitch() {
+  connectionWarning.value = false // 重置警告状态
+}
+
+// 连接警告事件（后端触发）
+function onLiveConnectionWarning() {
+  connectionWarning.value = true
+}
+
+// 定时器更新会话时长
+let sessionTimer = null
+
+function startTimers() {
+  // 更新会话时长
+  sessionTimer = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - sessionStartTime.value) / 1000)
+    const minutes = Math.floor(elapsed / 60)
+    const seconds = elapsed % 60
+    sessionDuration.value = `${minutes}m ${seconds.toString().padStart(2, '0')}s`
+  }, 1000)
+}
+
+function stopTimers() {
+  if (sessionTimer) clearInterval(sessionTimer)
+}
+
+// 关键词提取
+const stopWords = ['的', '了', '是', '在', '我', '你', '有', '这', '个', '和', '就', 'the', 'a', 'an', 'and', 'to', 'of', 'in', 'is', 'it', 'that']
+
+function extractKeywords(text) {
+  if (!text) return []
+
+  const words = text.toLowerCase()
+    .replace(/[^\u4e00-\u9fa5a-z\s]/g, '') // 只保留中英文
+    .split(/\s+/)
+    .filter(w => w.length > 1 && !stopWords.includes(w))
+
+  const freq = {}
+  words.forEach(w => freq[w] = (freq[w] || 0) + 1)
+
+  return Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([word]) => `#${word}`)
+}
+
+// 监听消息变化，提取关键词
+watch(messages, (msgs) => {
+  if (msgs.length === 0) {
+    topKeywords.value = []
+    return
+  }
+  const allText = msgs.map(m => m.content).join(' ')
+  topKeywords.value = extractKeywords(allText)
+}, { deep: true })
+
 onMounted(() => {
   EventsOn('live:status', onLiveStatus)
   EventsOn('live:transcript', onLiveTranscript)
@@ -206,11 +329,16 @@ onMounted(() => {
   EventsOn('live:error', onLiveError)
   EventsOn('live:done', onLiveDone)
   EventsOn('live:Interrupted', onLiveInterrupted)
+  EventsOn('live:connection-switch', onLiveConnectionSwitch)
+  EventsOn('live:connection-warning', onLiveConnectionWarning)
+
   StartLiveSession()
+  startTimers()
 })
 
 onUnmounted(() => {
   StopLiveSession()
+  stopTimers()
   EventsOff('live:status')
   EventsOff('live:transcript')
   EventsOff('live:interviewer-done')
@@ -218,6 +346,8 @@ onUnmounted(() => {
   EventsOff('live:error')
   EventsOff('live:done')
   EventsOff('live:Interrupted')
+  EventsOff('live:connection-switch')
+  EventsOff('live:connection-warning')
 })
 </script>
 
@@ -433,15 +563,33 @@ onUnmounted(() => {
   }
 }
 
+/* ===== 主内容区 - 双栏布局 ===== */
+.main-content {
+  display: flex;
+  flex: 1;
+  gap: 16px;
+  padding: 0 16px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ===== 左侧对话栏 ===== */
+.chat-column {
+  flex: 0 0 60%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 /* ===== 聊天区域 ===== */
 .chat-area {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 20px 24px 80px 24px;
+  padding: 16px 0 80px 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   min-height: 0;
   pointer-events: auto;
 }
@@ -465,9 +613,196 @@ onUnmounted(() => {
 }
 
 .scroll-spacer {
-  height: 40px;
+  height: 20px;
   flex-shrink: 0;
 }
+
+/* ===== 右侧信息面板 ===== */
+.info-panel {
+  flex: 0 0 38%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0 40px 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.info-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.info-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.info-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+
+/* 面板区块 */
+.panel-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.panel-section:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.section-title .icon {
+  font-size: 13px;
+}
+
+/* 连接状态提醒 */
+.connection-reminder {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(6, 182, 212, 0.05));
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.connection-reminder.warning {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(245, 158, 11, 0.08));
+  border-color: rgba(251, 191, 36, 0.35);
+  animation: pulse-warning 2s ease-in-out infinite;
+}
+
+@keyframes pulse-warning {
+
+  0%,
+  100% {
+    border-color: rgba(251, 191, 36, 0.35);
+  }
+
+  50% {
+    border-color: rgba(251, 191, 36, 0.6);
+  }
+}
+
+.connection-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.connection-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  gap: 6px;
+}
+
+.status-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.warning .status-text {
+  color: #fbbf24;
+}
+
+.status-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+.warning .status-hint {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* 统计网格 */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 8px;
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+  background: rgba(16, 185, 129, 0.12);
+  transform: translateY(-2px);
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #10b981;
+  line-height: 1;
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 关键词标签 */
+.keyword-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 28px;
+}
+
+.keyword-tags .empty-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+  font-style: italic;
+}
+
+.keyword-tags .tag {
+  padding: 5px 10px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 14px;
+  font-size: 11px;
+  color: rgba(167, 139, 250, 0.95);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.keyword-tags .tag:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(139, 92, 246, 0.15));
+  border-color: rgba(139, 92, 246, 0.5);
+  transform: translateY(-1px);
+}
+
+
 
 /* ===== 空状态 ===== */
 .empty-state {
@@ -568,8 +903,8 @@ onUnmounted(() => {
 }
 
 .msg-card {
-  max-width: 85%;
-  padding: 14px 18px;
+  max-width: 92%;
+  padding: 12px 16px;
   border-radius: 18px;
   backdrop-filter: blur(12px);
   transition: all 0.3s ease;
