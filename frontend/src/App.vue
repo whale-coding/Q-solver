@@ -4,6 +4,7 @@
   </Transition>
   <TopBar :shortcuts="shortcuts" :activeButtons="activeButtons" :isClickThrough="isClickThrough"
     :statusIcon="statusIcon" :statusText="statusText" :settings="settings" :isStealthMode="isStealthMode"
+    :isMacOS="isMacOS"
     @openSettings="openSettings" @quit="quit" />
 
   <!-- Live API 模式优先 -->

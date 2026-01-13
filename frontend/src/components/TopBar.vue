@@ -2,19 +2,19 @@
   <div class="top-bar-wrapper" style="--wails-draggable:drag">
     <div class="top-bar">
       <div class="control-group" :class="{ active: activeButtons.toggle }">
-        <span class="key-hint">{{ shortcuts.toggle?.keyName || 'Alt+H' }}</span>
+        <span class="key-hint">{{ shortcuts.toggle?.keyName || (isMacOS ? '⌘2' : 'F9') }}</span>
         <span class="label">隐藏/展示</span>
       </div>
       <div class="control-group" :class="{ active: activeButtons.solve }">
-        <span class="key-hint">{{ shortcuts.solve?.keyName || 'Alt+~' }}</span>
+        <span class="key-hint">{{ shortcuts.solve?.keyName || (isMacOS ? '⌘1' : 'F8') }}</span>
         <span class="label">一键解题</span>
       </div>
       <div class="control-group" :class="{ active: activeButtons.clickthrough || isClickThrough }">
-        <span class="key-hint">{{ shortcuts.clickthrough?.keyName || 'Alt+T' }}</span>
+        <span class="key-hint">{{ shortcuts.clickthrough?.keyName || (isMacOS ? '⌘3' : 'F10') }}</span>
         <span class="label">鼠标穿透</span>
       </div>
       <div class="control-group" style="cursor: default;">
-        <span class="key-hint">Alt+Move</span>
+        <span class="key-hint">{{ isMacOS ? '⌘⌥+Move' : 'Alt+Move' }}</span>
         <span class="label">移动/滚动</span>
       </div>
       <div class="divider"></div>
@@ -100,7 +100,8 @@ const props = defineProps({
   statusText: String,
 
   settings: Object,
-  isStealthMode: Boolean
+  isStealthMode: Boolean,
+  isMacOS: Boolean
 })
 
 defineEmits(['openSettings', 'quit'])
