@@ -82,6 +82,7 @@
     :isTestingConnection="uiState.isTestingConnection" :connectionStatus="uiState.connectionStatus"
     :renderedPrompt="renderedPrompt" :resumeRawContent="resumeState.rawContent" :isResumeParsing="resumeState.isParsing"
     :isMacOS="isMacOS"
+    v-model:activeTab="uiState.activeTab"
     @close="closeSettings" @save="saveSettings" @refresh-models="refreshModels" @test-connection="testConnection"
     @record-key="recordKey" @select-resume="selectResume" @clear-resume="clearResume" @parse-resume="parseResume"
     @update:resumeRawContent="val => resumeState.rawContent = val" />
@@ -548,8 +549,18 @@ onMounted(() => {
   }
 
   EventsOn('require-login', () => {
-    uiState.showSettings = true
-    uiState.activeTab = 'account'
+    // 强制更新 settings 关闭 Live Mode
+    if (settings.useLiveApi) settings.useLiveApi = false
+    
+    // 如果设置面板已经打开，直接更新 tempSettings 防止重置用户未保存的修改
+    if (uiState.showSettings) {
+      if (tempSettings.useLiveApi) tempSettings.useLiveApi = false
+    } else {
+      // 面板未打开，调用 openSettings 进行初始化
+      openSettings()
+    }
+    
+    uiState.activeTab = 'account' // 通过 v-model 同步到 SettingsModal
     showToast('请先配置 API Key', 'warning')
   })
 

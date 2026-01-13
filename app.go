@@ -425,6 +425,11 @@ func (a *App) SaveImageToFile(base64Data string) (bool, error) {
 
 // StartLiveSession 启动 Live API 会话
 func (a *App) StartLiveSession() error {
+	cfg := a.configManager.Get()
+	if cfg.APIKey == "" {
+		a.EmitEvent("require-login")
+		return nil
+	}
 	return a.liveManager.Start()
 }
 
