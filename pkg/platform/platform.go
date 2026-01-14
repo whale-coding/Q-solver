@@ -3,6 +3,12 @@ package platform
 // WindowHandle 窗口句柄类型（Windows 为 HWND，macOS 为 NSWindow 指针）
 type WindowHandle uintptr
 
+// 窗口级别常量
+const (
+	WindowLevelNormal   = 0 // 正常窗口级别
+	WindowLevelFloating = 3 // 置顶窗口级别
+)
+
 // Platform 平台相关操作接口
 type Platform interface {
 	// 获取当前进程主窗口句柄
@@ -28,6 +34,12 @@ type Platform interface {
 
 	// 请求截图权限 (macOS 10.15+，Windows 直接返回 true)
 	RequestScreenCaptureAccess() bool
+
+	// 打开系统设置的屏幕录制权限页面 (macOS 专用)
+	OpenScreenCaptureSettings()
+
+	// 设置窗口层级 (用于临时取消/恢复置顶)
+	SetWindowLevel(hwnd WindowHandle, level int) error
 }
 
 // Current 当前平台实现（由条件编译决定）

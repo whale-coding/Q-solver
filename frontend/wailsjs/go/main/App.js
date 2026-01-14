@@ -50,6 +50,10 @@ export function MoveWindow(arg1, arg2) {
   return window['go']['main']['App']['MoveWindow'](arg1, arg2);
 }
 
+export function OpenScreenCaptureSettings() {
+  return window['go']['main']['App']['OpenScreenCaptureSettings']();
+}
+
 export function ParseResume() {
   return window['go']['main']['App']['ParseResume']();
 }
@@ -76,6 +80,10 @@ export function ScrollContent(arg1) {
 
 export function SelectResume() {
   return window['go']['main']['App']['SelectResume']();
+}
+
+export function SetWindowAlwaysOnTop(arg1) {
+  return window['go']['main']['App']['SetWindowAlwaysOnTop'](arg1);
 }
 
 export function StartLiveSession() {

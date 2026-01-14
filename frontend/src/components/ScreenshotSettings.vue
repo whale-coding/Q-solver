@@ -9,8 +9,11 @@
           <p>请授权截图权限以正常使用截图功能，否则只能截取桌面壁纸。</p>
         </div>
       </div>
-      <button class="btn-permission" @click="requestPermission" :disabled="requestingPermission">
+      <button v-if="!settingsOpened" class="btn-permission" @click="requestPermission" :disabled="requestingPermission">
         {{ requestingPermission ? '正在请求...' : '授权截图权限' }}
+      </button>
+      <button v-else class="btn-permission btn-refresh" @click="refreshPermission" :disabled="requestingPermission">
+        {{ requestingPermission ? '正在检查...' : '刷新权限状态' }}
       </button>
     </div>
 
@@ -104,7 +107,7 @@
 
 <script setup>
 import { ref, watch, onMounted, reactive } from 'vue'
-import { GetScreenshotPreview, CheckScreenCapturePermission, RequestScreenCapturePermission } from '../../wailsjs/go/main/App'
+import { GetScreenshotPreview, CheckScreenCapturePermission, RequestScreenCapturePermission, OpenScreenCaptureSettings, SetWindowAlwaysOnTop } from '../../wailsjs/go/main/App'
 
 const props = defineProps(['modelValue'])
 const emit = defineEmits(['update:modelValue'])
@@ -123,6 +126,7 @@ const screenshotMode = ref('window')
 const isMacOS = ref(false)
 const hasPermission = ref(true)
 const requestingPermission = ref(false)
+const settingsOpened = ref(false) // 是否已打开设置页面
 
 // 检测是否为 macOS
 function detectPlatform() {
@@ -145,19 +149,45 @@ async function checkPermission() {
   }
 }
 
-// 请求截图权限
+// 请求截图权限 - 打开系统设置并取消置顶
 async function requestPermission() {
   requestingPermission.value = true
   try {
-    const result = await RequestScreenCapturePermission()
-    // 请求后重新检查权限状态
-    await checkPermission()
-    if (hasPermission.value) {
-      // 权限获取成功，刷新预览
-      updatePreview()
-    }
+    // 首次点击，请求权限并打开设置页面
+    await RequestScreenCapturePermission()
+    // 取消窗口置顶，方便用户操作设置
+    await SetWindowAlwaysOnTop(false)
+    // 打开系统设置的屏幕录制权限页面
+    await OpenScreenCaptureSettings()
+    // 标记已打开设置
+    settingsOpened.value = true
   } catch (e) {
     console.error('请求截图权限失败:', e)
+  } finally {
+    requestingPermission.value = false
+  }
+}
+
+// 刷新权限状态 - 用户设置完成后点击
+async function refreshPermission() {
+  requestingPermission.value = true
+  try {
+    await checkPermission()
+    if (hasPermission.value) {
+      // 权限获取成功，恢复置顶并刷新预览
+      await SetWindowAlwaysOnTop(true)
+      settingsOpened.value = false
+      updatePreview()
+    } else {
+      // 权限仍未获取，恢复置顶
+      await SetWindowAlwaysOnTop(true)
+      settingsOpened.value = false
+    }
+  } catch (e) {
+    console.error('刷新权限状态失败:', e)
+    // 即使失败也恢复置顶
+    await SetWindowAlwaysOnTop(true)
+    settingsOpened.value = false
   } finally {
     requestingPermission.value = false
   }
@@ -319,6 +349,15 @@ onMounted(async () => {
 .btn-permission:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+.btn-permission.btn-refresh {
+    background: #4CAF50;
+    color: #fff;
+}
+
+.btn-permission.btn-refresh:hover:not(:disabled) {
+    background: #5CBF60;
 }
 
 .preview-area {

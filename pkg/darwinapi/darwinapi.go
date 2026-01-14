@@ -126,6 +126,14 @@ void SetWindowAlpha(void* nsWindow, float alpha) {
         [window setAlphaValue:alpha];
     });
 }
+
+// 打开系统偏好设置的屏幕录制权限页面
+void OpenScreenCaptureSettings() {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSURL *url = [NSURL URLWithString:@"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"];
+        [[NSWorkspace sharedWorkspace] openURL:url];
+    });
+}
 */
 import "C"
 import (
@@ -137,6 +145,8 @@ const (
 	NSWindowSharingNone     = 0
 	NSWindowSharingReadOnly = 1
 
+	// NSNormalWindowLevel 正常窗口级别
+	NSNormalWindowLevel = 0
 	// NSFloatingWindowLevel 相当于 CGWindowLevelForKey(kCGFloatingWindowLevelKey)
 	NSFloatingWindowLevel = 3
 	// NSScreenSaverWindowLevel - 更高级别
@@ -201,4 +211,9 @@ func CheckScreenCaptureAccess() bool {
 // 会弹出系统权限对话框，用户需要在系统偏好设置中授权
 func RequestScreenCaptureAccess() bool {
 	return bool(C.RequestScreenCaptureAccess())
+}
+
+// OpenScreenCaptureSettings 打开系统偏好设置的屏幕录制权限页面
+func OpenScreenCaptureSettings() {
+	C.OpenScreenCaptureSettings()
 }

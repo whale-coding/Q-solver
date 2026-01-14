@@ -370,6 +370,24 @@ func (a *App) RequestScreenCapturePermission() bool {
 	return platform.Current.RequestScreenCaptureAccess()
 }
 
+// OpenScreenCaptureSettings 打开系统设置的屏幕录制权限页面 (macOS)
+func (a *App) OpenScreenCaptureSettings() {
+	platform.Current.OpenScreenCaptureSettings()
+}
+
+// SetWindowAlwaysOnTop 设置窗口是否置顶
+func (a *App) SetWindowAlwaysOnTop(alwaysOnTop bool) {
+	hwnd := a.stateManager.GetHwnd()
+	if hwnd == 0 {
+		return
+	}
+	if alwaysOnTop {
+		platform.Current.SetWindowLevel(hwnd, platform.WindowLevelFloating)
+	} else {
+		platform.Current.SetWindowLevel(hwnd, platform.WindowLevelNormal)
+	}
+}
+
 // ==================== LLM 相关 ====================
 
 // TestConnection 测试模型连通性

@@ -27,6 +27,8 @@ export function IsInterruptThinkingEnabled():Promise<boolean>;
 
 export function MoveWindow(arg1:number,arg2:number):Promise<void>;
 
+export function OpenScreenCaptureSettings():Promise<void>;
+
 export function ParseResume():Promise<string>;
 
 export function RemoveFocus():Promise<void>;
@@ -40,6 +42,8 @@ export function SaveImageToFile(arg1:string):Promise<boolean>;
 export function ScrollContent(arg1:string):Promise<void>;
 
 export function SelectResume():Promise<string>;
+
+export function SetWindowAlwaysOnTop(arg1:boolean):Promise<void>;
 
 export function StartLiveSession():Promise<void>;
 

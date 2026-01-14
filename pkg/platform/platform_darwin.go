@@ -82,3 +82,13 @@ func (p *darwinPlatform) CheckScreenCaptureAccess() bool {
 func (p *darwinPlatform) RequestScreenCaptureAccess() bool {
 	return darwinapi.RequestScreenCaptureAccess()
 }
+
+func (p *darwinPlatform) OpenScreenCaptureSettings() {
+	darwinapi.OpenScreenCaptureSettings()
+}
+
+func (p *darwinPlatform) SetWindowLevel(hwnd WindowHandle, level int) error {
+	window := unsafe.Pointer(uintptr(hwnd))
+	darwinapi.SetWindowLevel(window, level)
+	return nil
+}

@@ -52,3 +52,12 @@ func (p *windowsPlatform) CheckScreenCaptureAccess() bool {
 func (p *windowsPlatform) RequestScreenCaptureAccess() bool {
 	return true // Windows 不需要截图权限
 }
+
+func (p *windowsPlatform) OpenScreenCaptureSettings() {
+	// Windows 不需要截图权限，无操作
+}
+
+func (p *windowsPlatform) SetWindowLevel(hwnd WindowHandle, level int) error {
+	// Windows 使用不同的置顶机制，在 ApplyGhostMode 中处理
+	return nil
+}
