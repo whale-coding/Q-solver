@@ -106,8 +106,22 @@ wails build
 
 > ⚠️ **Compatibility Note**: The macOS version is currently in **compatibility adaptation stage** and may have bugs or instability. Please submit an Issue if you encounter any problems!
 
-### Shortcut Limitations
-The macOS version **does not support global shortcuts** (such as F8 for screenshot, F9 for hide, etc.). Please use the buttons on the interface.
+### Shortcuts
+The macOS version supports the following fixed shortcuts. **Customization is not supported yet**:
+
+| Function | Shortcut |
+|----------|----------|
+| Screenshot & Solve | `⌘1` |
+| Show/Hide | `⌘2` |
+| Click-Through | `⌘3` |
+| Move Window Up | `⌘⌥↑` |
+| Move Window Down | `⌘⌥↓` |
+| Move Window Left | `⌘⌥←` |
+| Move Window Right | `⌘⌥→` |
+| Scroll Up | `⌘⌥⇧↑` |
+| Scroll Down | `⌘⌥⇧↓` |
+
+> **Note**: Custom shortcuts are currently only available on Windows.
 
 ### Screenshot Permission
 On first launch, you need to grant screenshot permission:
