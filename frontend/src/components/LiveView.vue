@@ -196,7 +196,20 @@ function getLastMessage() {
   return messages.value[messages.value.length - 1]
 }
 
-function onLiveStatus(s) { status.value = s }
+function onLiveStatus(s) {
+  status.value = s
+  
+  // 根据状态控制计时器
+  if (s === 'connected') {
+    // 连接成功，重置并启动计时器
+    sessionStartTime.value = Date.now()
+    sessionDuration.value = '0m 00s'
+    startTimers()
+  } else if (s === 'error' || s === 'disconnected') {
+    // 连接失败或断开，停止计时器
+    stopTimers()
+  }
+}
 
 function onLiveTranscript(text) {
   const lastMsg = getLastMessage()
@@ -333,7 +346,7 @@ onMounted(() => {
   EventsOn('live:connection-warning', onLiveConnectionWarning)
 
   StartLiveSession()
-  startTimers()
+  // 计时器由 onLiveStatus('connected') 触发启动
 })
 
 onUnmounted(() => {

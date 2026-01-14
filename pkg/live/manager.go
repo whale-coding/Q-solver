@@ -27,8 +27,9 @@ type LiveSessionManager struct {
 	mu           sync.Mutex
 
 	// 协程管理
-	stopChan chan struct{}
-	wg       sync.WaitGroup
+	stopChan  chan struct{}
+	errorChan chan error // 错误通道，用于协程报告异常
+	wg        sync.WaitGroup
 }
 
 // NewLiveSessionManager 创建 Live Session 管理器
@@ -45,7 +46,6 @@ func NewLiveSessionManager(
 		configManager: configManager,
 		screenService: screenService,
 		emitEvent:     emitEvent,
-		stopChan:      make(chan struct{}),
 	}
 }
 
@@ -105,6 +105,13 @@ func (m *LiveSessionManager) Start() error {
 		return err
 	}
 
+	// 初始化通道
+	m.stopChan = make(chan struct{})
+	m.errorChan = make(chan error, 2) // 缓冲区为2，防止阻塞
+
+	// 启动错误监听协程
+	go m.errorWatcher()
+
 	// 启动音频发送协程
 	m.wg.Add(1)
 	go m.audioSender(session, m.audioCapture.GetAudioChannel())
@@ -116,12 +123,35 @@ func (m *LiveSessionManager) Start() error {
 	return nil
 }
 
-// Stop 停止 Live API 会话
+// Stop 停止 Live API 会话（外部调用）
 func (m *LiveSessionManager) Stop() {
+	// 发送停止信号，通知 errorWatcher 退出
+	m.mu.Lock()
+	if m.stopChan != nil {
+		select {
+		case <-m.stopChan:
+			// 已关闭
+		default:
+			close(m.stopChan)
+		}
+	}
+	m.mu.Unlock()
+
+	// 执行清理
+	m.cleanup()
+
+	// 等待协程结束
+	m.wg.Wait()
+
+	m.emitEvent("live:status", "disconnected")
+}
+
+// cleanup 内部清理方法（停止音频采集和关闭会话）
+func (m *LiveSessionManager) cleanup() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	logger.Println("Live: StopLiveSession 调用")
+	logger.Println("Live: cleanup 调用")
 
 	// 停止音频采集
 	if m.audioCapture != nil {
@@ -136,11 +166,22 @@ func (m *LiveSessionManager) Stop() {
 		m.session.Close()
 		m.session = nil
 	}
+}
 
-	// 等待协程结束
-	m.wg.Wait()
-
-	m.emitEvent("live:status", "disconnected")
+// errorWatcher 监听错误通道，发生异常时执行清理
+func (m *LiveSessionManager) errorWatcher() {
+	select {
+	case err := <-m.errorChan:
+		logger.Printf("Live: errorWatcher 收到错误: %v", err)
+		// 执行清理
+		m.cleanup()
+		// 通知前端
+		m.emitEvent("live:status", "error")
+		m.emitEvent("live:error", err.Error())
+	case <-m.stopChan:
+		// 正常停止，不做额外处理
+		logger.Println("Live: errorWatcher 正常退出")
+	}
 }
 
 // IsActive 检查 Live Session 是否活跃
@@ -159,7 +200,12 @@ func (m *LiveSessionManager) audioSender(session llm.LiveSession, audioChan <-ch
 		if session != nil {
 			if err := session.SendAudio(audioData); err != nil {
 				logger.Printf("Live: 发送音频失败: %v", err)
-				// 连接可能已断开，退出循环
+				// 向错误通道报告异常
+				select {
+				case m.errorChan <- err:
+				default:
+					// 通道满或已关闭，忽略
+				}
 				return
 			}
 		}
@@ -172,17 +218,17 @@ func (m *LiveSessionManager) receiveLoop(session llm.LiveSession) {
 	defer m.wg.Done()
 
 	logger.Println("Live: 接收循环已启动")
-	defer func() {
-		logger.Println("Live: 接收循环结束")
-		session.Close()
-	}()
 
 	for {
 		msg, err := session.Receive()
 		if err != nil {
 			logger.Printf("Live: 接收错误: %v", err)
-			m.emitEvent("live:status", "disconnected")
-			m.emitEvent("live:error", err.Error())
+			// 向错误通道报告异常
+			select {
+			case m.errorChan <- err:
+			default:
+				// 通道满或已关闭，忽略
+			}
 			return
 		}
 		if msg == nil {
