@@ -74,15 +74,15 @@
       <!-- 右侧：信息面板 -->
       <div class="info-panel">
         <!-- 连接状态提醒 -->
-        <div class="panel-section connection-reminder" :class="{ warning: connectionWarning }">
+        <div class="panel-section connection-reminder" :class="{ warning: connectionWarning, error: status === 'error', disconnected: status === 'disconnected' }">
           <div class="section-title">
             <span class="icon">⏱️</span>
             <span>连接状态</span>
           </div>
           <div class="connection-info">
             <div class="connection-status">
-              <span class="status-text">{{ connectionWarning ? '警告：连接即将超时' : '连接正常' }}</span>
-              <span class="status-hint">{{ connectionWarning ? '请准备手动切换连接' : '最长10分钟自动切换' }}</span>
+              <span class="status-text">{{ connectionStatusText }}</span>
+              <span class="status-hint">{{ connectionStatusHint }}</span>
             </div>
           </div>
         </div>
@@ -181,6 +181,23 @@ const statusText = computed(() => {
   return map[status.value] || '未知'
 })
 
+// 右侧面板连接状态显示
+const connectionStatusText = computed(() => {
+  if (status.value === 'error') return '连接失败'
+  if (status.value === 'disconnected') return '未连接'
+  if (status.value === 'connecting') return '连接中...'
+  if (connectionWarning.value) return '警告：连接即将超时'
+  return '连接正常'
+})
+
+const connectionStatusHint = computed(() => {
+  if (status.value === 'error') return '请检查网络或模型配置后重试'
+  if (status.value === 'disconnected') return '等待连接...'
+  if (status.value === 'connecting') return '正在建立连接...'
+  if (connectionWarning.value) return '请准备手动切换连接'
+  return '最长10分钟自动切换'
+})
+
 function scrollToBottom() {
   setTimeout(() => {
     if (chatContainer.value) {
@@ -197,6 +214,7 @@ function getLastMessage() {
 }
 
 function onLiveStatus(s) {
+  console.log('[LiveView] onLiveStatus 收到状态:', s)
   status.value = s
   
   // 根据状态控制计时器
@@ -252,7 +270,11 @@ function onLiveAiText(text) {
   }
 }
 
-function onLiveError(err) { status.value = 'error'; errorMsg.value = err }
+function onLiveError(err) {
+  console.log('[LiveView] onLiveError 收到错误:', err)
+  status.value = 'error'
+  errorMsg.value = err
+}
 
 function onLiveDone() {
   // 标记最后一条消息完成
@@ -695,6 +717,16 @@ onUnmounted(() => {
   background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(245, 158, 11, 0.08));
   border-color: rgba(251, 191, 36, 0.35);
   animation: pulse-warning 2s ease-in-out infinite;
+}
+
+.connection-reminder.error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.08));
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.connection-reminder.disconnected {
+  background: linear-gradient(135deg, rgba(156, 163, 175, 0.1), rgba(107, 114, 128, 0.05));
+  border-color: rgba(156, 163, 175, 0.25);
 }
 
 @keyframes pulse-warning {
