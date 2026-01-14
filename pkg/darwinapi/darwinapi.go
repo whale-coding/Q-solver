@@ -4,9 +4,26 @@ package darwinapi
 
 /*
 #cgo CFLAGS: -x objective-c
-#cgo LDFLAGS: -framework Cocoa -framework AppKit
+#cgo LDFLAGS: -framework Cocoa -framework AppKit -framework CoreGraphics
 
 #import <Cocoa/Cocoa.h>
+#import <CoreGraphics/CoreGraphics.h>
+
+// 检查截图权限 (macOS 10.15+)
+bool CheckScreenCaptureAccess() {
+    if (@available(macOS 10.15, *)) {
+        return CGPreflightScreenCaptureAccess();
+    }
+    return true; // macOS 10.15 以下不需要权限
+}
+
+// 请求截图权限 (macOS 10.15+)
+bool RequestScreenCaptureAccess() {
+    if (@available(macOS 10.15, *)) {
+        return CGRequestScreenCaptureAccess();
+    }
+    return true; // macOS 10.15 以下不需要权限
+}
 
 // 获取应用主窗口
 void* GetMainWindow() {
@@ -173,4 +190,15 @@ func SetWindowCornerRadius(window unsafe.Pointer, radius float32) {
 // SetWindowAlpha 设置窗口透明度
 func SetWindowAlpha(window unsafe.Pointer, alpha float32) {
 	C.SetWindowAlpha(window, C.float(alpha))
+}
+
+// CheckScreenCaptureAccess 检查是否有截图权限 (macOS 10.15+)
+func CheckScreenCaptureAccess() bool {
+	return bool(C.CheckScreenCaptureAccess())
+}
+
+// RequestScreenCaptureAccess 请求截图权限 (macOS 10.15+)
+// 会弹出系统权限对话框，用户需要在系统偏好设置中授权
+func RequestScreenCaptureAccess() bool {
+	return bool(C.RequestScreenCaptureAccess())
 }

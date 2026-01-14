@@ -5,6 +5,8 @@ import {config} from '../models';
 
 export function CancelRunningTask():Promise<boolean>;
 
+export function CheckScreenCapturePermission():Promise<boolean>;
+
 export function ClearResume():Promise<void>;
 
 export function CopyCode():Promise<void>;
@@ -28,6 +30,8 @@ export function MoveWindow(arg1:number,arg2:number):Promise<void>;
 export function ParseResume():Promise<string>;
 
 export function RemoveFocus():Promise<void>;
+
+export function RequestScreenCapturePermission():Promise<boolean>;
 
 export function RestoreFocus():Promise<void>;
 

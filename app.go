@@ -5,6 +5,7 @@ import (
 	"Q-Solver/pkg/live"
 	"Q-Solver/pkg/llm"
 	"Q-Solver/pkg/logger"
+	"Q-Solver/pkg/platform"
 	"Q-Solver/pkg/resume"
 	"Q-Solver/pkg/screen"
 	"Q-Solver/pkg/shortcut"
@@ -357,6 +358,16 @@ func (a *App) GetScreenshotPreview(quality int, sharpen float64, grayscale bool,
 		mode = a.configManager.Get().ScreenshotMode
 	}
 	return a.screenService.CapturePreview(quality, sharpen, grayscale, noCompression, mode)
+}
+
+// CheckScreenCapturePermission 检查截图权限 (macOS)
+func (a *App) CheckScreenCapturePermission() bool {
+	return platform.Current.CheckScreenCaptureAccess()
+}
+
+// RequestScreenCapturePermission 请求截图权限 (macOS)
+func (a *App) RequestScreenCapturePermission() bool {
+	return platform.Current.RequestScreenCaptureAccess()
 }
 
 // ==================== LLM 相关 ====================

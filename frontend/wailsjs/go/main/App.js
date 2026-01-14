@@ -6,6 +6,10 @@ export function CancelRunningTask() {
   return window['go']['main']['App']['CancelRunningTask']();
 }
 
+export function CheckScreenCapturePermission() {
+  return window['go']['main']['App']['CheckScreenCapturePermission']();
+}
+
 export function ClearResume() {
   return window['go']['main']['App']['ClearResume']();
 }
@@ -52,6 +56,10 @@ export function ParseResume() {
 
 export function RemoveFocus() {
   return window['go']['main']['App']['RemoveFocus']();
+}
+
+export function RequestScreenCapturePermission() {
+  return window['go']['main']['App']['RequestScreenCapturePermission']();
 }
 
 export function RestoreFocus() {

@@ -74,3 +74,11 @@ func (p *darwinPlatform) RemoveFocus(hwnd WindowHandle) error {
 	darwinapi.SetWindowNotActivating(window, true)
 	return nil
 }
+
+func (p *darwinPlatform) CheckScreenCaptureAccess() bool {
+	return darwinapi.CheckScreenCaptureAccess()
+}
+
+func (p *darwinPlatform) RequestScreenCaptureAccess() bool {
+	return darwinapi.RequestScreenCaptureAccess()
+}

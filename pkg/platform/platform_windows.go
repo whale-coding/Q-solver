@@ -44,3 +44,11 @@ func (p *windowsPlatform) RemoveFocus(hwnd WindowHandle) error {
 	winapi.RemoveFocus(uintptr(hwnd))
 	return nil
 }
+
+func (p *windowsPlatform) CheckScreenCaptureAccess() bool {
+	return true // Windows 不需要截图权限
+}
+
+func (p *windowsPlatform) RequestScreenCaptureAccess() bool {
+	return true // Windows 不需要截图权限
+}

@@ -1,5 +1,19 @@
 <template>
   <div class="screenshot-settings">
+    <!-- macOS 截图权限提示 -->
+    <div v-if="isMacOS && !hasPermission" class="permission-alert">
+      <div class="alert-content">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-text">
+          <strong>需要截图权限</strong>
+          <p>请授权截图权限以正常使用截图功能，否则只能截取桌面壁纸。</p>
+        </div>
+      </div>
+      <button class="btn-permission" @click="requestPermission" :disabled="requestingPermission">
+        {{ requestingPermission ? '正在请求...' : '授权截图权限' }}
+      </button>
+    </div>
+
     <div class="preview-area">
       <div v-if="loading" class="loading">加载中...</div>
       <img v-else-if="previewImage" :src="previewImage" class="preview-img" @click="showLightbox = true" title="点击放大预览" />
@@ -90,7 +104,7 @@
 
 <script setup>
 import { ref, watch, onMounted, reactive } from 'vue'
-import { GetScreenshotPreview } from '../../wailsjs/go/main/App'
+import { GetScreenshotPreview, CheckScreenCapturePermission, RequestScreenCapturePermission } from '../../wailsjs/go/main/App'
 
 const props = defineProps(['modelValue'])
 const emit = defineEmits(['update:modelValue'])
@@ -104,6 +118,50 @@ const isGrayscale = ref(true)
 const noCompression = ref(false)
 const showLightbox = ref(false)
 const screenshotMode = ref('window')
+
+// macOS 权限相关
+const isMacOS = ref(false)
+const hasPermission = ref(true)
+const requestingPermission = ref(false)
+
+// 检测是否为 macOS
+function detectPlatform() {
+  const platform = navigator.platform?.toLowerCase() || ''
+  const userAgent = navigator.userAgent?.toLowerCase() || ''
+  isMacOS.value = platform.includes('mac') || userAgent.includes('mac')
+}
+
+// 检查截图权限
+async function checkPermission() {
+  if (!isMacOS.value) {
+    hasPermission.value = true
+    return
+  }
+  try {
+    hasPermission.value = await CheckScreenCapturePermission()
+  } catch (e) {
+    console.error('检查截图权限失败:', e)
+    hasPermission.value = true // 出错时默认有权限
+  }
+}
+
+// 请求截图权限
+async function requestPermission() {
+  requestingPermission.value = true
+  try {
+    const result = await RequestScreenCapturePermission()
+    // 请求后重新检查权限状态
+    await checkPermission()
+    if (hasPermission.value) {
+      // 权限获取成功，刷新预览
+      updatePreview()
+    }
+  } catch (e) {
+    console.error('请求截图权限失败:', e)
+  } finally {
+    requestingPermission.value = false
+  }
+}
 
 // Tooltip state
 const tooltip = reactive({
@@ -187,7 +245,9 @@ async function updatePreview() {
     }
 }
 
-onMounted(() => {
+onMounted(async () => {
+    detectPlatform()
+    await checkPermission()
     updatePreview()
 })
 </script>
@@ -198,6 +258,69 @@ onMounted(() => {
     flex-direction: column;
     gap: 15px;
 }
+
+/* 权限提示样式 */
+.permission-alert {
+    background: rgba(255, 193, 7, 0.15);
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.alert-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.alert-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.alert-text {
+    flex: 1;
+}
+
+.alert-text strong {
+    color: #ffc107;
+    font-size: 13px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.alert-text p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.btn-permission {
+    background: #ffc107;
+    color: #000;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-permission:hover:not(:disabled) {
+    background: #ffca2c;
+    transform: translateY(-1px);
+}
+
+.btn-permission:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .preview-area {
     height: 200px;
     background: #000;

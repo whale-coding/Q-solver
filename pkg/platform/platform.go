@@ -22,6 +22,12 @@ type Platform interface {
 
 	// 移除焦点
 	RemoveFocus(hwnd WindowHandle) error
+
+	// 检查截图权限 (macOS 10.15+，Windows 直接返回 true)
+	CheckScreenCaptureAccess() bool
+
+	// 请求截图权限 (macOS 10.15+，Windows 直接返回 true)
+	RequestScreenCaptureAccess() bool
 }
 
 // Current 当前平台实现（由条件编译决定）
