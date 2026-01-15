@@ -141,7 +141,7 @@ jobs:
 
   build-macos-amd64:
     name: Build macOS (Intel)
-    runs-on: macos-13
+    runs-on: macos-15
     permissions:
       contents: write
 
@@ -168,7 +168,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/go/bin/wails
-          key: ${{ runner.os }}-amd64-go-tools-wails-v1
+          key: ${{ runner.os }}-macos15-arm-cross-amd64-wails-v1
 
       - name: Install Tools
         if: steps.cache-tools.outputs.cache-hit != 'true'
@@ -182,18 +182,32 @@ jobs:
 
       - name: Build
         run: |
-          echo "🔨 Starting Wails Build for macOS (amd64)..."
-          wails build -ldflags "-s -w" -tags prod
+          echo "🔨 Starting Wails Build for macOS (Intel/amd64) on ARM runner..."
+          wails build -ldflags "-s -w" -tags prod -platform darwin/amd64
 
-      - name: Prepare Artifact
+      - name: Verify & Rename Artifact
         run: |
           APP_PATH="build/bin/Q-Solver.app"
-          if [ -d "$APP_PATH" ]; then
-              echo "✅ Build successful: $APP_PATH"
-              # 重命名 app 以区分架构
-              mv "$APP_PATH" "build/bin/Q-Solver-macOS-amd64.app"
+          SUB_PATH="build/bin/darwin/amd64/Q-Solver.app"
+
+          TARGET_NAME="build/bin/Q-Solver-macOS-amd64.app"
+
+          if [ -d "$SUB_PATH" ]; then
+              echo "✅ Found app in subdir: $SUB_PATH"
+              mv "$SUB_PATH" "$TARGET_NAME"
+          elif [ -d "$APP_PATH" ]; then
+              echo "✅ Found app in root bin: $APP_PATH"
+              ARCH=$(lipo -archs "$APP_PATH/Contents/MacOS/Q-Solver")
+              echo "🔍 Verified Architecture: $ARCH"
+              if [[ "$ARCH" != *"x86_64"* ]]; then
+                  echo "❌ Error: Expected x86_64 (amd64) but got $ARCH"
+                  exit 1
+              fi
+              mv "$APP_PATH" "$TARGET_NAME"
           else
               echo "❌ App bundle not found! Build failed?"
+              echo "Listing build/bin contents:"
+              ls -R build/bin/
               exit 1
           fi
 
