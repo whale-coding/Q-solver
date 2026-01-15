@@ -97,7 +97,7 @@ cd Q-Solver
 wails dev
 
 # 3. Build Production Version
-wails build
+wails build -ldflags "-s -w" -tags prod
 ```
 
 ---

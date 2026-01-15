@@ -93,7 +93,7 @@ cd Q-Solver
 wails dev
 
 # 3. 编译生产版本
-wails build
+wails build -ldflags "-s -w" -tags prod 
 ```
 
 ---
