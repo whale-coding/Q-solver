@@ -46,6 +46,14 @@ type LiveSessionManager struct {
 	audioCapture *audio.LoopbackCapture
 	mu           sync.Mutex
 
+	// 问题导图处理器
+	graph *Graph
+
+	// 当前轮次的问题和回答（用于累积后推送给 Graph）
+	currentQuestion strings.Builder
+	currentAnswer   strings.Builder
+	roundMu         sync.Mutex
+
 	// 重连状态机
 	state       atomic.Int32 // 当前状态 (SessionState)
 	reconnectMu sync.Mutex   // 保证只有一个协程执行重连
@@ -132,6 +140,9 @@ func (m *LiveSessionManager) Start() error {
 	m.stopChan = make(chan struct{})
 	m.errorChan = make(chan error, 2)
 
+	// 初始化问题导图处理器（每3轮触发一次总结）
+	m.graph = NewGraph(m.ctx, m.configManager, m.llmService, m.emitEvent, 3)
+
 	// 启动错误监听协程
 	go m.errorWatcher()
 
@@ -162,6 +173,18 @@ func (m *LiveSessionManager) Stop() {
 		}
 	}
 	m.mu.Unlock()
+
+	// 清空问题导图处理器
+	if m.graph != nil {
+		m.graph.Clear()
+		m.graph = nil
+	}
+
+	// 清空当前轮次缓存
+	m.roundMu.Lock()
+	m.currentQuestion.Reset()
+	m.currentAnswer.Reset()
+	m.roundMu.Unlock()
 
 	// 执行清理
 	m.cleanup()
@@ -349,21 +372,51 @@ func (m *LiveSessionManager) receiveLoop() {
 		case llm.LiveInterrupted:
 			logger.Println("检测到打断")
 			m.emitEvent("live:Interrupted", msg.Text)
+			// 打断时，清空当前轮次缓存
+			m.roundMu.Lock()
+			m.currentQuestion.Reset()
+			m.currentAnswer.Reset()
+			m.roundMu.Unlock()
+
 		case llm.LiveMsgTranscript:
 			m.emitEvent("live:transcript", msg.Text)
+			// 累积问题文本
+			m.roundMu.Lock()
+			m.currentQuestion.WriteString(msg.Text)
+			m.roundMu.Unlock()
+
 		case llm.LiveMsgInterviewerDone:
 			logger.Println("Live: 面试官说话结束")
 			m.emitEvent("live:interviewer-done")
+
 		case llm.LiveMsgAIText:
 			m.emitEvent("live:ai-text", msg.Text)
+			// 累积回答文本
+			m.roundMu.Lock()
+			m.currentAnswer.WriteString(msg.Text)
+			m.roundMu.Unlock()
+
 		case llm.LiveMsgToolCall:
 			logger.Printf("Live: 工具调用 %s (ID=%s)", msg.ToolName, msg.ToolID)
 			if msg.ToolName == "get_screenshot" {
 				m.handleScreenshot(*session, msg.ToolID)
 			}
+
 		case llm.LiveMsgDone:
 			logger.Println("Live: 对话轮完成")
 			m.emitEvent("live:done")
+			// 一轮对话完成，推送给 Graph
+			m.roundMu.Lock()
+			question := m.currentQuestion.String()
+			answer := m.currentAnswer.String()
+			m.currentQuestion.Reset()
+			m.currentAnswer.Reset()
+			m.roundMu.Unlock()
+
+			if m.graph != nil && question != "" && answer != "" {
+				m.graph.Push(question, answer)
+			}
+
 		case llm.LiveMsgError:
 			logger.Printf("Live: 错误: %s", msg.Text)
 			m.emitEvent("live:error", msg.Text)

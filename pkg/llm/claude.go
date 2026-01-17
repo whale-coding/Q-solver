@@ -187,6 +187,50 @@ func (a *ClaudeAdapter) TestChat(ctx context.Context) error {
 	return err
 }
 
+// GenerateContent 非流式生成内容
+func (a *ClaudeAdapter) GenerateContent(ctx context.Context, model string, messages []Message) (Message, error) {
+	if model == "" {
+		model = a.config.Model
+	}
+	if model == "" {
+		model = "claude-sonnet-4-20250514"
+	}
+
+	claudeMessages, systemPrompt := a.toClaudeMessages(messages)
+
+	params := anthropic.MessageNewParams{
+		Model:       anthropic.Model(model),
+		MaxTokens:   int64(a.config.MaxTokens),
+		Messages:    claudeMessages,
+		Temperature: anthropic.Float(a.config.Temperature),
+		TopP:        anthropic.Float(a.config.TopP),
+	}
+
+	if systemPrompt != "" {
+		params.System = []anthropic.TextBlockParam{
+			{Type: "text", Text: systemPrompt},
+		}
+	}
+
+	resp, err := a.client.Messages.New(ctx, params)
+	if err != nil {
+		return Message{}, err
+	}
+
+	// 提取内容
+	var content string
+	for _, block := range resp.Content {
+		if block.Type == "text" {
+			content += block.Text
+		}
+	}
+
+	return Message{
+		Role:    RoleAssistant,
+		Content: content,
+	}, nil
+}
+
 // GetModels 获取模型列表
 func (a *ClaudeAdapter) GetModels(ctx context.Context) ([]string, error) {
 	page, err := a.client.Models.List(ctx, anthropic.ModelListParams{})

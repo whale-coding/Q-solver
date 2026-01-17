@@ -79,6 +79,33 @@ func (a *CustomAdapter) TestChat(ctx context.Context) error {
 	}
 }
 
+// GenerateContent 非流式生成内容
+func (a *CustomAdapter) GenerateContent(ctx context.Context, model string, messages []Message) (Message, error) {
+	// 如果指定了模型，使用指定的模型；否则使用配置中的模型
+	routeModel := model
+	if routeModel == "" {
+		routeModel = a.config.Model
+	}
+	routeModelLower := strings.ToLower(routeModel)
+
+	switch {
+	case strings.HasPrefix(routeModelLower, "gemini"):
+		if a.gemini == nil {
+			return Message{}, fmt.Errorf("Gemini 适配器未初始化")
+		}
+		logger.Println("CustomAdapter: 路由到 Gemini(非流式) ->", routeModel)
+		return a.gemini.GenerateContent(ctx, model, messages)
+
+	case strings.HasPrefix(routeModelLower, "claude"):
+		logger.Println("CustomAdapter: 路由到 Claude(非流式) ->", routeModel)
+		return a.claude.GenerateContent(ctx, model, messages)
+
+	default:
+		logger.Println("CustomAdapter: 路由到 OpenAI(非流式) ->", routeModel)
+		return a.openai.GenerateContent(ctx, model, messages)
+	}
+}
+
 // GetModels 获取模型列表
 func (a *CustomAdapter) GetModels(ctx context.Context) ([]string, error) {
 	// Custom 模式下，通常连接的是 OneAPI 等聚合层，它们通常兼容 OpenAI 协议

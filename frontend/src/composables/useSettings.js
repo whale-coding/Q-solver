@@ -13,6 +13,7 @@ export function useSettings(shortcuts, tempShortcuts, uiState, callbacks) {
     provider: 'google',
     baseURL: '',
     model: '',
+    assistantModel: '',
     prompt: '',
     transparency: 0,
     mode: 'interview',
@@ -103,6 +104,7 @@ export function useSettings(shortcuts, tempShortcuts, uiState, callbacks) {
     settings.provider = config.provider || 'google'
     settings.baseURL = config.baseURL || ''
     settings.model = config.model || 'gemini-2.5-flash'
+    settings.assistantModel = config.assistantModel || ''
     settings.prompt = config.prompt || ''
     settings.compressionQuality = config.compressionQuality || 80
     settings.sharpening = config.sharpening || 0
@@ -227,6 +229,7 @@ export function useSettings(shortcuts, tempShortcuts, uiState, callbacks) {
         apiKey: tempSettings.apiKey,
         baseURL: tempSettings.baseURL,
         model: tempSettings.model,
+        assistantModel: tempSettings.assistantModel,
         prompt: tempSettings.prompt,
         opacity: 1.0 - tempSettings.transparency,
         keepContext: tempSettings.keepContext,

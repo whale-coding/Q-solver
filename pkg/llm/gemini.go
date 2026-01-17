@@ -253,6 +253,51 @@ func (a *GeminiAdapter) TestChat(ctx context.Context) error {
 	return err
 }
 
+// GenerateContent 非流式生成内容
+func (a *GeminiAdapter) GenerateContent(ctx context.Context, model string, messages []Message) (Message, error) {
+	if model == "" {
+		model = a.config.Model
+	}
+	if model == "" {
+		model = "gemini-2.0-flash"
+	}
+
+	contents, systemInstruction := a.toGeminiContents(messages)
+
+	generateConfig := &genai.GenerateContentConfig{
+		Temperature:     genai.Ptr(float32(a.config.Temperature)),
+		TopP:            genai.Ptr(float32(a.config.TopP)),
+		TopK:            genai.Ptr(float32(a.config.TopK)),
+		MaxOutputTokens: int32(a.config.MaxTokens),
+	}
+
+	if systemInstruction != "" {
+		generateConfig.SystemInstruction = &genai.Content{
+			Parts: []*genai.Part{{Text: systemInstruction}},
+		}
+	}
+
+	resp, err := a.client.Models.GenerateContent(ctx, model, contents, generateConfig)
+	if err != nil {
+		return Message{}, err
+	}
+
+	// 提取内容
+	var content string
+	if resp != nil && len(resp.Candidates) > 0 && resp.Candidates[0].Content != nil {
+		for _, part := range resp.Candidates[0].Content.Parts {
+			if part.Text != "" {
+				content += part.Text
+			}
+		}
+	}
+
+	return Message{
+		Role:    RoleAssistant,
+		Content: content,
+	}, nil
+}
+
 // GetModels 获取模型列表
 func (a *GeminiAdapter) GetModels(ctx context.Context) ([]string, error) {
 	page, err := a.client.Models.List(ctx, &genai.ListModelsConfig{})

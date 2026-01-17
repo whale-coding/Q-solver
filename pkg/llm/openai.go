@@ -198,6 +198,37 @@ func (a *OpenAIAdapter) TestChat(ctx context.Context) error {
 	return err
 }
 
+// GenerateContent 非流式生成内容
+func (a *OpenAIAdapter) GenerateContent(ctx context.Context, model string, messages []Message) (Message, error) {
+	if model == "" {
+		model = a.config.Model
+	}
+
+	openaiMessages := a.toOpenAIMessages(messages)
+
+	resp, err := a.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+		Model:       model,
+		Messages:    openaiMessages,
+		Temperature: openai.Float(a.config.Temperature),
+		TopP:        openai.Float(a.config.TopP),
+		MaxTokens:   openai.Int(int64(a.config.MaxTokens)),
+	})
+
+	if err != nil {
+		return Message{}, a.parseError(err)
+	}
+
+	content := ""
+	if len(resp.Choices) > 0 {
+		content = resp.Choices[0].Message.Content
+	}
+
+	return Message{
+		Role:    RoleAssistant,
+		Content: content,
+	}, nil
+}
+
 // GetModels 获取模型列表
 func (a *OpenAIAdapter) GetModels(ctx context.Context) ([]string, error) {
 	resp, err := a.client.Models.List(ctx)
