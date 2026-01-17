@@ -252,6 +252,14 @@ func (m *LiveSessionManager) audioSender(audioChan <-chan []byte) {
 			logger.Printf("Live: 发送音频失败 (%d/3): %v", failCount, err)
 
 			if failCount >= 3 {
+				// 检查配置是否仍然启用 LiveAPI
+				cfg := m.configManager.Get()
+				if !cfg.UseLiveApi {
+					logger.Println("Live: 配置已禁用 LiveAPI，不再重连")
+					m.state.Store(int32(StateStopped))
+					return
+				}
+
 				logger.Println("Live: 连续 3 次发送失败，触发重连")
 				// 主动触发重连（如果还没有的话）
 				go m.handleGoAway(*session)
@@ -290,6 +298,11 @@ func (m *LiveSessionManager) receiveLoop() {
 
 		msg, err := (*session).Receive()
 		if err != nil {
+			// 检查是否已停止
+			if m.state.Load() == int32(StateStopped) {
+				return
+			}
+
 			// 检查是否正在重连
 			if m.state.Load() == int32(StateReconnecting) {
 				// 正在重连，忽略这个错误
@@ -297,6 +310,14 @@ func (m *LiveSessionManager) receiveLoop() {
 			}
 
 			logger.Printf("Live: 接收错误: %v", err)
+
+			// 检查配置是否仍然启用 LiveAPI
+			cfg := m.configManager.Get()
+			if !cfg.UseLiveApi {
+				logger.Println("Live: 配置已禁用 LiveAPI，不再重连")
+				m.state.Store(int32(StateStopped))
+				return
+			}
 
 			// 连接断开（可能没有 GoAway），尝试重连
 			// 不直接报错，而是触发重连机制
@@ -310,6 +331,16 @@ func (m *LiveSessionManager) receiveLoop() {
 
 		switch msg.Type {
 		case llm.LiveMsgGoAway:
+			// 检查是否已停止或配置已禁用
+			if m.state.Load() == int32(StateStopped) {
+				return
+			}
+			cfg := m.configManager.Get()
+			if !cfg.UseLiveApi {
+				logger.Println("Live: 配置已禁用 LiveAPI，不处理 GoAway")
+				m.state.Store(int32(StateStopped))
+				return
+			}
 			// 收到 goaway，触发重连
 			logger.Println("Live: 收到 GoAway，开始重连")
 			m.handleGoAway(*session)
@@ -383,9 +414,23 @@ func (m *LiveSessionManager) handleGoAway(oldSession llm.LiveSession) {
 	var err error
 
 	for attempt := 1; attempt <= maxReconnectAttempts; attempt++ {
+		// 每次循环都检查是否已停止
+		if m.state.Load() == int32(StateStopped) {
+			logger.Println("Live: 重连被取消（已停止）")
+			return
+		}
+
 		logger.Printf("Live: 重连尝试 %d/%d", attempt, maxReconnectAttempts)
 
 		cfg := m.configManager.Get()
+
+		// 检查配置是否仍然启用 LiveAPI
+		if !cfg.UseLiveApi {
+			logger.Println("Live: 重连被取消（配置已禁用 LiveAPI）")
+			m.state.Store(int32(StateStopped))
+			return
+		}
+
 		liveCfg := llm.GetLiveConfig(cfg)
 		liveCfg.ResumeToken = resumeToken // 使用恢复令牌
 
@@ -396,8 +441,24 @@ func (m *LiveSessionManager) handleGoAway(oldSession llm.LiveSession) {
 
 		logger.Printf("Live: 重连失败: %v", err)
 		if attempt < maxReconnectAttempts {
-			time.Sleep(reconnectDelay)
+			// 使用 select 等待，这样可以响应停止信号
+			select {
+			case <-m.stopChan:
+				logger.Println("Live: 重连被取消（收到停止信号）")
+				return
+			case <-time.After(reconnectDelay):
+				// 继续下一次尝试
+			}
 		}
+	}
+
+	// 最后再检查一次是否已停止
+	if m.state.Load() == int32(StateStopped) {
+		logger.Println("Live: 重连完成前被取消")
+		if newSession != nil {
+			newSession.Close()
+		}
+		return
 	}
 
 	if err != nil {

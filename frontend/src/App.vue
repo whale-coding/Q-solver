@@ -1,7 +1,4 @@
 <template>
-  <Transition name="fade">
-    <!-- <InitLoading v-if="initStatus !== 'ready'" :status="initStatus" /> -->
-  </Transition>
   <TopBar :shortcuts="shortcuts" :activeButtons="activeButtons" :isClickThrough="isClickThrough"
     :statusIcon="statusIcon" :statusText="statusText" :settings="settings" :isStealthMode="isStealthMode"
     :isMacOS="isMacOS"
