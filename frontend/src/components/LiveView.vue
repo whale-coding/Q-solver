@@ -366,21 +366,30 @@ function clearNodesFromBackend() {
   selectedNodeId.value = null
 }
 
-function addTreeNode(question, answer, msgId) {
-  // MVP: 简单地将新节点挂到最后一个节点下（后续可接入副模型做语义识别）
-  const lastNode = treeNodes.value[treeNodes.value.length - 1]
-  const node = {
-    id: generateId(),
-    pid: lastNode?.id || null,
-    title: question.slice(0, 20),
-    question,
-    answer,
-    msgId,
-    keyPoints: [], // 后续由副模型填充
-    timestamp: Date.now()
+/**
+ * 删除节点（供后端调用）
+ * @param {Object} data - { id }
+ */
+function removeNodeFromBackend(data) {
+  const idx = treeNodes.value.findIndex(n => n.id === data.id)
+  if (idx !== -1) {
+    // 同时删除该节点的所有子节点
+    const idsToRemove = new Set([data.id])
+    let changed = true
+    while (changed) {
+      changed = false
+      treeNodes.value.forEach(n => {
+        if (n.pid && idsToRemove.has(n.pid) && !idsToRemove.has(n.id)) {
+          idsToRemove.add(n.id)
+          changed = true
+        }
+      })
+    }
+    treeNodes.value = treeNodes.value.filter(n => !idsToRemove.has(n.id))
+    if (idsToRemove.has(selectedNodeId.value)) {
+      selectedNodeId.value = null
+    }
   }
-  treeNodes.value.push(node)
-  selectedNodeId.value = node.id
 }
 
 function exportNotes() {
@@ -439,10 +448,6 @@ function exportNotes() {
 }
 
 // ===== 事件处理 =====
-let currentQuestion = ''
-let currentAnswer = ''
-let currentMsgId = ''
-
 function onLiveStatus(s) {
   status.value = s
   if (s === 'connected') {
@@ -459,22 +464,14 @@ function onLiveTranscript(text) {
   // 结束上一条 AI 消息
   if (lastMsg?.type === 'ai' && !lastMsg.isComplete) {
     lastMsg.isComplete = true
-    // 添加到知识树
-    if (currentQuestion && currentAnswer) {
-      addTreeNode(currentQuestion, currentAnswer, currentMsgId)
-    }
   }
   
   // 追加或新建语音消息
   if (lastMsg?.type === 'interviewer' && !lastMsg.isComplete) {
     lastMsg.content += text
-    currentQuestion = lastMsg.content
   } else {
     const newMsg = { id: generateId(), type: 'interviewer', content: text, timestamp: Date.now(), isComplete: false }
     messages.value.push(newMsg)
-    currentQuestion = text
-    currentMsgId = newMsg.id
-    currentAnswer = ''
   }
   scrollToBottom()
 }
@@ -490,11 +487,9 @@ function onLiveAiText(text) {
   // 追加或新建 AI 消息
   if (lastMsg?.type === 'ai' && !lastMsg.isComplete) {
     lastMsg.content += text
-    currentAnswer = lastMsg.content
   } else {
     const newMsg = { id: generateId(), type: 'ai', content: text, timestamp: Date.now(), isComplete: false }
     messages.value.push(newMsg)
-    currentAnswer = text
   }
   scrollToBottom()
 }
@@ -507,13 +502,6 @@ function onLiveError(err) {
 function onLiveDone() {
   const lastMsg = messages.value[messages.value.length - 1]
   if (lastMsg) lastMsg.isComplete = true
-  
-  // 最后一轮加入知识树
-  if (currentQuestion && currentAnswer) {
-    addTreeNode(currentQuestion, currentAnswer, currentMsgId)
-    currentQuestion = ''
-    currentAnswer = ''
-  }
 }
 
 function onLiveInterrupted() {
@@ -559,6 +547,7 @@ onMounted(async () => {
   // 导图节点操作事件（供后端调用）
   EventsOn('graph:add-node', addNodeFromBackend)
   EventsOn('graph:update-node', updateNodeFromBackend)
+  EventsOn('graph:remove-node', removeNodeFromBackend)
   EventsOn('graph:clear', clearNodesFromBackend)
   
   StartLiveSession()
@@ -579,6 +568,7 @@ onUnmounted(() => {
   // 移除导图事件
   EventsOff('graph:add-node')
   EventsOff('graph:update-node')
+  EventsOff('graph:remove-node')
   EventsOff('graph:clear')
 })
 
@@ -859,7 +849,7 @@ watch(messages, scrollToBottom, { deep: true })
 
 /* ===== 右侧树栏 ===== */
 .tree-column {
-  width: 300px;
+  width: 380px;
   flex-shrink: 0;
   min-height: 0;
   display: flex;
@@ -909,8 +899,8 @@ watch(messages, scrollToBottom, { deep: true })
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   padding: 12px;
-  height: 220px;
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 280px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -970,8 +960,9 @@ watch(messages, scrollToBottom, { deep: true })
 
 /* 详情面板 */
 .detail-panel {
-  flex: 1;
-  min-height: 0;  /* 重要：允许收缩 */
+  flex-shrink: 0;
+  max-height: 200px;
+  min-height: 120px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;

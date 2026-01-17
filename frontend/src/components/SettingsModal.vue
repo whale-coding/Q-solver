@@ -64,6 +64,18 @@
             </p>
           </div>
 
+          <!-- 辅助模型 -->
+          <div class="form-group">
+            <div class="model-header">
+              <label>辅助模型</label>
+            </div>
+            <ModelSelect v-model="tempSettings.assistantModel" :models="availableModels" :loading="isLoadingModels" 
+              placeholder="选择辅助模型（可选）" />
+            <p class="hint-text">
+              💡 用于总结对话生成问题导图，留空则不生成导图
+            </p>
+          </div>
+
           <div class="form-group">
             <div class="prompt-header">
               <label for="prompt-text" style="margin-bottom: 0">系统提示词 (Prompt)</label>

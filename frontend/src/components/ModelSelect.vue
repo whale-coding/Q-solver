@@ -43,7 +43,7 @@
                         </span>
                     </div>
                 </template>
-                <span v-else class="placeholder">请选择模型</span>
+                <span v-else class="placeholder">{{ placeholder }}</span>
                 <span class="arrow" :class="{ rotated: isOpen }">
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                         <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
@@ -128,6 +128,10 @@ const props = defineProps({
     disabled: {
         type: Boolean,
         default: false
+    },
+    placeholder: {
+        type: String,
+        default: '请选择模型'
     }
 })
 

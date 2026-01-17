@@ -23,6 +23,7 @@ export namespace config {
 	    topK?: number;
 	    maxTokens?: number;
 	    thinkingBudget?: number;
+	    assistantModel?: string;
 	    useLiveApi?: boolean;
 	
 	    static createFrom(source: any = {}) {
@@ -53,6 +54,7 @@ export namespace config {
 	        this.topK = source["topK"];
 	        this.maxTokens = source["maxTokens"];
 	        this.thinkingBudget = source["thinkingBudget"];
+	        this.assistantModel = source["assistantModel"];
 	        this.useLiveApi = source["useLiveApi"];
 	    }
 	

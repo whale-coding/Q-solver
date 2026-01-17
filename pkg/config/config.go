@@ -33,6 +33,9 @@ type Config struct {
 	MaxTokens      int     `json:"maxTokens,omitempty"`
 	ThinkingBudget int     `json:"thinkingBudget,omitempty"`
 
+	// 辅助模型（用于总结对话生成问题导图）
+	AssistantModel string `json:"assistantModel,omitempty"`
+
 	// Live API
 	UseLiveApi bool `json:"useLiveApi,omitempty"`
 }
@@ -67,6 +70,9 @@ func NewDefaultConfig() Config {
 		TopK:           40,
 		MaxTokens:      8192,
 		ThinkingBudget: 16000,
+
+		// 辅助模型
+		AssistantModel: "",
 
 		// Live API
 		UseLiveApi: false,
