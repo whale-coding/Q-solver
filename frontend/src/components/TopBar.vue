@@ -1,15 +1,15 @@
 <template>
   <div class="top-bar-wrapper" style="--wails-draggable:drag">
     <div class="top-bar">
-      <div class="control-group" :class="{ active: activeButtons.toggle }">
+      <div class="control-group" :class="{ active: activeButtons.toggle }" style="--wails-draggable:no-drag">
         <span class="key-hint">{{ shortcuts.toggle?.keyName || (isMacOS ? '⌘2' : 'F9') }}</span>
         <span class="label">隐藏/展示</span>
       </div>
-      <div class="control-group" :class="{ active: activeButtons.solve }">
+      <div class="control-group" :class="{ active: activeButtons.solve }" style="--wails-draggable:no-drag">
         <span class="key-hint">{{ shortcuts.solve?.keyName || (isMacOS ? '⌘1' : 'F8') }}</span>
         <span class="label">一键解题</span>
       </div>
-      <div class="control-group" :class="{ active: activeButtons.clickthrough || isClickThrough }">
+      <div class="control-group" :class="{ active: activeButtons.clickthrough || isClickThrough }" style="--wails-draggable:no-drag">
         <span class="key-hint">{{ shortcuts.clickthrough?.keyName || (isMacOS ? '⌘3' : 'F10') }}</span>
         <span class="label">鼠标穿透</span>
       </div>
@@ -18,12 +18,12 @@
         <span class="label">移动/滚动</span>
       </div>
       <div class="divider"></div>
-      <div class="control-group" @click="$emit('openSettings')" style="cursor: pointer;"
+      <div class="control-group" @click="$emit('openSettings')" style="cursor: pointer; --wails-draggable:no-drag"
         @mouseenter="showSettingsTooltip" @mouseleave="hideSettingsTooltip" ref="settingsBtnRef">
         <span class="label">⚙️ 设置</span>
       </div>
       <div class="divider"></div>
-      <div class="status-group" ref="statusGroupRef" @mouseenter="showTooltip" @mouseleave="hideTooltip">
+      <div class="status-group" ref="statusGroupRef" @mouseenter="showTooltip" @mouseleave="hideTooltip" style="--wails-draggable:no-drag">
         <div class="status-indicator" :class="statusClass">
           <svg class="status-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <!-- 已连接/就绪/解题完成: 信号满格 -->
@@ -52,7 +52,7 @@
         </div>
       </div>
       <div class="divider"></div>
-      <div class="control-group" style="cursor: pointer;" @click="$emit('quit')">
+      <div class="control-group" style="cursor: pointer; --wails-draggable:no-drag" @click="$emit('quit')">
         <span class="label">❌ 退出</span>
       </div>
     </div>
