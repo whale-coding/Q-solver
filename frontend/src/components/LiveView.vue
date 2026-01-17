@@ -53,37 +53,40 @@
         </div>
       </div>
 
-      <!-- 右侧：知识树 + 详情 -->
+      <!-- 右侧：问题导图 + 详情 -->
       <div class="tree-column">
-        <!-- 知识树 -->
+        <!-- 问题导图 -->
         <div class="tree-panel">
-          <div class="panel-title">🌳 知识树</div>
-          <div class="tree-container" ref="treeContainer">
-            <div v-if="treeNodes.length === 0" class="tree-empty">
+          <div class="panel-header">
+            <div class="panel-title">🗺️ 问题导图</div>
+            <button class="reset-view-btn" @click="fitView" title="适应视图">⟲</button>
+          </div>
+          <div class="tree-container">
+            <div v-show="flowNodes.length === 0" class="tree-empty">
               对话开始后自动生成
             </div>
-            <svg v-else class="tree-svg" :viewBox="svgViewBox">
-              <!-- 连接线 -->
-              <g class="tree-links">
-                <path v-for="link in treeLinks" :key="link.id"
-                      :d="link.path"
-                      :class="{ highlighted: link.highlighted }"
-                      class="tree-link" />
-              </g>
-              <!-- 节点 -->
-              <g class="tree-nodes">
-                <g v-for="node in treeNodesPositioned" :key="node.id"
-                   :transform="`translate(${node.x}, ${node.y})`"
-                   class="tree-node"
-                   :class="{ selected: selectedNodeId === node.id, highlighted: node.highlighted }"
-                   @click="selectNode(node)">
-                  <!-- 节点背景 -->
-                  <rect class="node-bg" x="-40" y="-14" width="80" height="28" rx="14" />
-                  <!-- 节点文字 -->
-                  <text class="node-text" dy="4" text-anchor="middle">{{ truncate(node.title, 6) }}</text>
-                </g>
-              </g>
-            </svg>
+            <VueFlow
+              v-show="flowNodes.length > 0"
+              ref="vueFlowRef"
+              :nodes="flowNodes"
+              :edges="flowEdges"
+              :node-types="nodeTypes"
+              :default-viewport="{ x: 0, y: 0, zoom: 1 }"
+              :min-zoom="0.3"
+              :max-zoom="2"
+              :fit-view-on-init="true"
+              :nodes-draggable="false"
+              :nodes-connectable="false"
+              :edges-updatable="false"
+              :pan-on-drag="true"
+              :zoom-on-scroll="true"
+              :zoom-on-pinch="true"
+              :pan-on-scroll="false"
+              @node-click="onNodeClick"
+              class="question-flow"
+            >
+              <Background :gap="16" :size="1" pattern-color="rgba(255,255,255,0.03)" />
+            </VueFlow>
           </div>
         </div>
 
@@ -91,7 +94,7 @@
         <div class="detail-panel">
           <div class="panel-title">📝 节点详情</div>
           <div v-if="!selectedNode" class="detail-empty">
-            点击树节点查看详情
+            点击节点查看详情
           </div>
           <div v-else class="detail-content">
             <!-- 路径导航 -->
@@ -138,20 +141,41 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick, markRaw } from 'vue'
 import { marked } from 'marked'
+import { VueFlow } from '@vue-flow/core'
+import { Background } from '@vue-flow/background'
 import { EventsOn, EventsOff } from '../../wailsjs/runtime/runtime'
 import { StartLiveSession, StopLiveSession } from '../../wailsjs/go/main/App'
+import QuestionNode from './QuestionNode.vue'
+
+// Vue Flow 节点类型
+const nodeTypes = {
+  question: markRaw(QuestionNode)
+}
+
+// Vue Flow 实例引用
+const vueFlowRef = ref(null)
+
+function fitView() {
+  // 通过事件或 nextTick 调用
+  nextTick(() => {
+    if (vueFlowRef.value) {
+      vueFlowRef.value.fitView({ padding: 0.2 })
+    }
+  })
+}
 
 // ===== 状态 =====
 const status = ref('disconnected')
 const errorMsg = ref('')
 const chatContainer = ref(null)
+const treeContainer = ref(null)
 const messages = ref([])
 const highlightMsgId = ref(null)
 
-// 知识树
-const treeNodes = ref([])
+// 问题导图数据
+const treeNodes = ref([])  // 原始节点数据
 const selectedNodeId = ref(null)
 
 // 计时
@@ -177,37 +201,18 @@ const selectedNodePath = computed(() => {
   return path
 })
 
-// 树布局计算
-const svgViewBox = computed(() => {
-  const positioned = treeNodesPositioned.value
-  if (positioned.length === 0) return '0 0 200 200'
-  
-  // 计算实际边界
-  const xs = positioned.map(n => n.x)
-  const ys = positioned.map(n => n.y)
-  const minX = Math.min(...xs) - 60
-  const maxX = Math.max(...xs) + 60
-  const minY = Math.min(...ys) - 40
-  const maxY = Math.max(...ys) + 50
-  
-  const width = Math.max(200, maxX - minX)
-  const height = Math.max(200, maxY - minY)
-  
-  return `${minX} ${minY} ${width} ${height}`
-})
-
-const treeNodesPositioned = computed(() => {
+// Vue Flow 节点（从 treeNodes 转换）
+const flowNodes = computed(() => {
   if (treeNodes.value.length === 0) return []
   
-  // 简单的层级布局
-  const levels = {}
+  // 构建层级结构
   const nodeMap = {}
+  const levels = {}
   
-  treeNodes.value.forEach(n => {
-    nodeMap[n.id] = { ...n, children: [] }
+  treeNodes.value.forEach((n, idx) => {
+    nodeMap[n.id] = { ...n, index: idx + 1, children: [] }
   })
   
-  // 构建树结构
   treeNodes.value.forEach(n => {
     if (n.pid && nodeMap[n.pid]) {
       nodeMap[n.pid].children.push(nodeMap[n.id])
@@ -225,53 +230,46 @@ const treeNodesPositioned = computed(() => {
   const roots = treeNodes.value.filter(n => !n.pid)
   roots.forEach(r => assignLevel(nodeMap[r.id], 0))
   
-  // 计算位置
-  const positioned = []
-  const highlightedIds = new Set()
-  
-  // 高亮路径
-  if (selectedNodeId.value) {
-    let current = nodeMap[selectedNodeId.value]
-    while (current) {
-      highlightedIds.add(current.id)
-      current = current.pid ? nodeMap[current.pid] : null
-    }
-  }
-  
+  // 生成 Vue Flow 节点
+  const nodes = []
   Object.keys(levels).forEach(level => {
-    const nodes = levels[level]
-    const y = 50 + parseInt(level) * 80  // 增大层级间距
-    const startX = 120 - (nodes.length - 1) * 50
-    nodes.forEach((node, i) => {
-      positioned.push({
-        ...node,
-        x: startX + i * 100,  // 增大节点间距
-        y,
-        highlighted: highlightedIds.has(node.id)
+    const levelNodes = levels[level]
+    const y = parseInt(level) * 100 + 50
+    const totalWidth = levelNodes.length * 140
+    const startX = -totalWidth / 2 + 70
+    
+    levelNodes.forEach((node, i) => {
+      nodes.push({
+        id: node.id,
+        type: 'question',
+        position: { x: startX + i * 140, y },
+        data: {
+          title: truncate(node.title, 8),
+          index: node.index,
+          selected: selectedNodeId.value === node.id
+        }
       })
     })
   })
   
-  return positioned
+  return nodes
 })
 
-const treeLinks = computed(() => {
-  const links = []
-  const posMap = {}
-  treeNodesPositioned.value.forEach(n => posMap[n.id] = n)
-  
-  treeNodesPositioned.value.forEach(node => {
-    if (node.pid && posMap[node.pid]) {
-      const parent = posMap[node.pid]
-      links.push({
-        id: `${parent.id}-${node.id}`,
-        path: `M${parent.x},${parent.y + 16} Q${parent.x},${(parent.y + node.y) / 2} ${node.x},${node.y - 16}`,
-        highlighted: node.highlighted && parent.highlighted
-      })
-    }
-  })
-  
-  return links
+// Vue Flow 边（连接线）
+const flowEdges = computed(() => {
+  return treeNodes.value
+    .filter(n => n.pid)
+    .map(n => ({
+      id: `e-${n.pid}-${n.id}`,
+      source: n.pid,
+      target: n.id,
+      type: 'smoothstep',
+      animated: selectedNodeId.value === n.id,
+      style: {
+        stroke: selectedNodeId.value === n.id ? '#10b981' : 'rgba(99, 102, 241, 0.5)',
+        strokeWidth: selectedNodeId.value === n.id ? 2 : 1.5
+      }
+    }))
 })
 
 // ===== 方法 =====
@@ -310,17 +308,62 @@ function scrollToBottom() {
   })
 }
 
-function selectNode(node) {
+// Vue Flow 节点点击
+function onNodeClick({ node }) {
   selectedNodeId.value = node.id
-  // 高亮对应的消息
-  if (node.msgId) {
-    highlightMsgId.value = node.msgId
-    const el = document.getElementById('msg-' + node.msgId)
+  const treeNode = treeNodes.value.find(n => n.id === node.id)
+  if (treeNode?.msgId) {
+    highlightMsgId.value = treeNode.msgId
+    const el = document.getElementById('msg-' + treeNode.msgId)
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
     setTimeout(() => highlightMsgId.value = null, 2000)
   }
+}
+
+// ===== 后端调用接口（通过事件） =====
+// 后端可以通过 EventsEmit 调用这些方法来操作导图
+
+/**
+ * 添加节点（供后端调用）
+ * @param {Object} data - { id?, pid?, title, question, answer, keyPoints?, msgId? }
+ */
+function addNodeFromBackend(data) {
+  const node = {
+    id: data.id || generateId(),
+    pid: data.pid || (treeNodes.value.length > 0 ? treeNodes.value[treeNodes.value.length - 1].id : null),
+    title: data.title || data.question?.slice(0, 20) || '未知问题',
+    question: data.question || '',
+    answer: data.answer || '',
+    msgId: data.msgId || null,
+    keyPoints: data.keyPoints || [],
+    timestamp: Date.now()
+  }
+  treeNodes.value.push(node)
+  selectedNodeId.value = node.id
+}
+
+/**
+ * 更新节点（供后端调用）
+ * @param {Object} data - { id, title?, question?, answer?, keyPoints? }
+ */
+function updateNodeFromBackend(data) {
+  const node = treeNodes.value.find(n => n.id === data.id)
+  if (node) {
+    if (data.title !== undefined) node.title = data.title
+    if (data.question !== undefined) node.question = data.question
+    if (data.answer !== undefined) node.answer = data.answer
+    if (data.keyPoints !== undefined) node.keyPoints = data.keyPoints
+  }
+}
+
+/**
+ * 清空导图（供后端调用）
+ */
+function clearNodesFromBackend() {
+  treeNodes.value = []
+  selectedNodeId.value = null
 }
 
 function addTreeNode(question, answer, msgId) {
@@ -350,7 +393,7 @@ function exportNotes() {
   md += `**时间**: ${dateStr}\n`
   md += `**时长**: ${sessionDuration.value}\n\n`
   md += `---\n\n`
-  md += `## 知识树\n\n`
+  md += `## 问题导图\n\n`
   
   // 构建树形 markdown
   function renderTree(node, indent = '') {
@@ -505,6 +548,7 @@ function stopTimer() {
 
 // ===== 生命周期 =====
 onMounted(async () => {
+  // Live API 事件
   EventsOn('live:status', onLiveStatus)
   EventsOn('live:transcript', onLiveTranscript)
   EventsOn('live:ai-text', onLiveAiText)
@@ -512,18 +556,30 @@ onMounted(async () => {
   EventsOn('live:done', onLiveDone)
   EventsOn('live:Interrupted', onLiveInterrupted)
   
+  // 导图节点操作事件（供后端调用）
+  EventsOn('graph:add-node', addNodeFromBackend)
+  EventsOn('graph:update-node', updateNodeFromBackend)
+  EventsOn('graph:clear', clearNodesFromBackend)
+  
   StartLiveSession()
 })
 
 onUnmounted(() => {
   StopLiveSession()
   stopTimer()
+  
+  // 移除 Live API 事件
   EventsOff('live:status')
   EventsOff('live:transcript')
   EventsOff('live:ai-text')
   EventsOff('live:error')
   EventsOff('live:done')
   EventsOff('live:Interrupted')
+  
+  // 移除导图事件
+  EventsOff('graph:add-node')
+  EventsOff('graph:update-node')
+  EventsOff('graph:clear')
 })
 
 watch(messages, scrollToBottom, { deep: true })
@@ -805,29 +861,55 @@ watch(messages, scrollToBottom, { deep: true })
 .tree-column {
   width: 300px;
   flex-shrink: 0;
-  min-height: 0;  /* 重要：允许收缩 */
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
   overflow: hidden;
 }
 
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 .panel-title {
   font-size: 11px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-/* 知识树面板 */
+.reset-view-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reset-view-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* 问题导图面板 */
 .tree-panel {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   padding: 12px;
-  height: 220px;  /* 固定高度而不是min/max */
+  height: 220px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -836,12 +918,11 @@ watch(messages, scrollToBottom, { deep: true })
 
 .tree-container {
   flex: 1;
-  overflow: auto;
-  min-height: 0;  /* 重要 */
+  overflow: hidden;
+  min-height: 0;
+  position: relative;
+  border-radius: 6px;
 }
-
-.tree-container::-webkit-scrollbar { width: 4px; height: 4px; }
-.tree-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 2px; }
 
 .tree-empty {
   font-size: 12px;
@@ -850,61 +931,41 @@ watch(messages, scrollToBottom, { deep: true })
   align-items: center;
   justify-content: center;
   height: 100%;
+  cursor: default;
 }
 
-.tree-svg {
-  display: block;
-  min-width: 250px;
-  min-height: 180px;
+/* Vue Flow 样式覆盖 */
+.question-flow {
+  width: 100%;
+  height: 100%;
 }
 
-.tree-link {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.15);
+.question-flow :deep(.vue-flow__pane) {
+  cursor: grab;
+}
+
+.question-flow :deep(.vue-flow__pane:active) {
+  cursor: grabbing;
+}
+
+.question-flow :deep(.vue-flow__edge-path) {
+  stroke: rgba(99, 102, 241, 0.5);
   stroke-width: 2;
-  transition: stroke 0.3s;
 }
 
-.tree-link.highlighted {
+.question-flow :deep(.vue-flow__edge.animated .vue-flow__edge-path) {
   stroke: #10b981;
-  stroke-width: 2.5;
+  stroke-dasharray: 5;
+  animation: dashdraw 0.5s linear infinite;
 }
 
-.tree-node {
-  cursor: pointer;
-  transition: all 0.2s;
+@keyframes dashdraw {
+  from { stroke-dashoffset: 10; }
+  to { stroke-dashoffset: 0; }
 }
 
-.tree-node .node-bg {
-  fill: rgba(55, 65, 81, 0.8);
-  stroke: rgba(139, 92, 246, 0.5);
-  stroke-width: 2;
-  transition: all 0.2s;
-}
-
-.tree-node .node-text {
-  font-size: 11px;
-  font-weight: 500;
-  fill: rgba(255, 255, 255, 0.85);
-  pointer-events: none;
-}
-
-.tree-node:hover .node-bg {
-  fill: rgba(139, 92, 246, 0.3);
-  stroke: #8b5cf6;
-}
-
-.tree-node.selected .node-bg,
-.tree-node.highlighted .node-bg {
-  fill: rgba(16, 185, 129, 0.25);
-  stroke: #10b981;
-  stroke-width: 2.5;
-}
-
-.tree-node.selected .node-text,
-.tree-node.highlighted .node-text {
-  fill: #fff;
-  font-weight: 600;
+.question-flow :deep(.vue-flow__background) {
+  background: transparent;
 }
 
 /* 详情面板 */
