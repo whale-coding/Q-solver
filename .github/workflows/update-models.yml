@@ -1,0 +1,43 @@
+name: Update Model Capabilities
+
+on:
+  schedule:
+    # 每天 UTC 时间 00:00 运行 (北京时间 08:00)
+    - cron: '0 0 * * *'
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  update-models:
+    name: Update OpenRouter Models
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Fetch OpenRouter Models
+        run: python script/get_model_capability.py
+
+      - name: Check for Changes
+        id: check
+        run: |
+          git diff --quiet frontend/src/config/model-capabilities.json || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and Push
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/config/model-capabilities.json
+          git commit -m "chore: update model capabilities from OpenRouter [skip ci]"
+          git push

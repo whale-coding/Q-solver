@@ -56,7 +56,6 @@ func (s *Service) GetProvider() Provider {
 
 // DetectProviderType 根据 baseURL 或 model 名称自动识别提供商
 func DetectProviderType(Provider string) ProviderType {
-	// 1. 优先根据 baseURL 判断
 	switch {
 	case strings.Contains(Provider, "google"):
 		return ProviderGemini
@@ -65,7 +64,6 @@ func DetectProviderType(Provider string) ProviderType {
 	case strings.Contains(Provider, "custom"):
 		return ProviderCustom
 	}
-	//全都没匹配到就用openai
 	return ProviderOpenAI
 }
 

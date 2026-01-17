@@ -723,12 +723,14 @@ input:checked+.slider:before {
     border-radius: var(--radius-md);
     cursor: pointer;
     font-size: 16px;
+    color: var(--text-secondary);
     transition: all var(--transition-fast);
 }
 
 .btn-icon:hover:not(:disabled) {
     background: var(--bg-card-hover);
     border-color: var(--border-default);
+    color: var(--color-primary);
 }
 
 .btn-icon:disabled {
@@ -736,9 +738,13 @@ input:checked+.slider:before {
     cursor: not-allowed;
 }
 
-.btn-icon .spin {
+.btn-icon .action-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.btn-icon .action-icon.spin {
     animation: iconSpin 1s linear infinite;
-    display: inline-block;
 }
 
 @keyframes iconSpin {

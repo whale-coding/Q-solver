@@ -14,8 +14,33 @@
                         <span class="provider-name">{{ getProviderName(modelValue) }}</span>
                     </div>
                     <div class="capability-tags">
-                        <span v-if="getModelCapabilities(modelValue).image" class="cap-tag">图片</span>
-                        <span v-if="getModelCapabilities(modelValue).pdf" class="cap-tag">PDF</span>
+                        <span v-if="getModelCapabilities(modelValue).image" class="cap-tag" title="支持图片">
+                            <svg class="cap-icon" viewBox="0 0 16 16" fill="none">
+                                <rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+                                <circle cx="5.5" cy="6.5" r="1" fill="currentColor"/>
+                                <path d="M2.5 11l3-3 2 2 4-4 2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        <span v-if="getModelCapabilities(modelValue).file" class="cap-tag" title="支持文件">
+                            <svg class="cap-icon" viewBox="0 0 16 16" fill="none">
+                                <path d="M4 2h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.2"/>
+                                <path d="M9 2v4h4" stroke="currentColor" stroke-width="1.2"/>
+                            </svg>
+                        </span>
+                        <span v-if="getModelCapabilities(modelValue).audio" class="cap-tag" title="支持音频">
+                            <svg class="cap-icon" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 3v10M5 5.5v5M11 5.5v5M2 7v2M14 7v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                        <span v-if="getModelCapabilities(modelValue).video" class="cap-tag" title="支持视频">
+                            <svg class="cap-icon" viewBox="0 0 16 16" fill="none">
+                                <rect x="1" y="4" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.2"/>
+                                <path d="M11 7l4-2v6l-4-2v-2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        <span v-if="getModelCapabilities(modelValue).contextLength" class="cap-tag cap-context" title="上下文长度">
+                            {{ formatContextLength(getModelCapabilities(modelValue).contextLength) }}
+                        </span>
                     </div>
                 </template>
                 <span v-else class="placeholder">请选择模型</span>
@@ -46,8 +71,33 @@
                                 <span class="provider-name">{{ getProviderName(model) }}</span>
                             </div>
                             <div class="capability-tags">
-                                <span v-if="getModelCapabilities(model).image" class="cap-tag">图片</span>
-                                <span v-if="getModelCapabilities(model).pdf" class="cap-tag">PDF</span>
+                                <span v-if="getModelCapabilities(model).image" class="cap-tag" title="支持图片">
+                                    <svg class="cap-icon" viewBox="0 0 16 16" fill="none">
+                                        <rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+                                        <circle cx="5.5" cy="6.5" r="1" fill="currentColor"/>
+                                        <path d="M2.5 11l3-3 2 2 4-4 2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span v-if="getModelCapabilities(model).file" class="cap-tag" title="支持文件">
+                                    <svg class="cap-icon" viewBox="0 0 16 16" fill="none">
+                                        <path d="M4 2h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.2"/>
+                                        <path d="M9 2v4h4" stroke="currentColor" stroke-width="1.2"/>
+                                    </svg>
+                                </span>
+                                <span v-if="getModelCapabilities(model).audio" class="cap-tag" title="支持音频">
+                                    <svg class="cap-icon" viewBox="0 0 16 16" fill="none">
+                                        <path d="M8 3v10M5 5.5v5M11 5.5v5M2 7v2M14 7v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                </span>
+                                <span v-if="getModelCapabilities(model).video" class="cap-tag" title="支持视频">
+                                    <svg class="cap-icon" viewBox="0 0 16 16" fill="none">
+                                        <rect x="1" y="4" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.2"/>
+                                        <path d="M11 7l4-2v6l-4-2v-2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span v-if="getModelCapabilities(model).contextLength" class="cap-tag cap-context" title="上下文长度">
+                                    {{ formatContextLength(getModelCapabilities(model).contextLength) }}
+                                </span>
                             </div>
                             <span v-if="modelValue === model" class="check-icon">✓</span>
                         </div>
@@ -60,7 +110,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { getProviderLogo, getProviderName, getModelCapabilities } from '../utils/modelCapabilities'
+import { getProviderLogo, getProviderName, getModelCapabilities, formatContextLength } from '../utils/modelCapabilities'
 
 const props = defineProps({
     modelValue: {
@@ -168,6 +218,12 @@ onUnmounted(() => {
     max-height: 28px;
 }
 
+.provider-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
 .model-info {
     flex: 1;
     min-width: 0;
@@ -190,20 +246,42 @@ onUnmounted(() => {
     color: var(--text-tertiary);
 }
 
+/* 能力标签 - 精致图标风格 */
 .capability-tags {
     display: flex;
-    gap: var(--space-1);
+    gap: 4px;
     flex-shrink: 0;
+    align-items: center;
 }
 
 .cap-tag {
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: var(--radius-full);
-    background: var(--color-primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    background: rgba(99, 102, 241, 0.1);
     color: var(--color-primary);
-    font-weight: 500;
-    white-space: nowrap;
+    transition: all var(--transition-fast);
+}
+
+.cap-tag:hover {
+    background: rgba(99, 102, 241, 0.2);
+}
+
+.cap-tag.cap-context {
+    width: auto;
+    padding: 0 6px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--font-mono, 'SF Mono', 'Menlo', monospace);
+    letter-spacing: -0.02em;
+}
+
+.cap-icon {
+    width: 13px;
+    height: 13px;
 }
 
 .placeholder {
@@ -286,6 +364,23 @@ onUnmounted(() => {
 
 .dropdown-item .provider-name {
     font-size: 10px;
+}
+
+.dropdown-item .cap-tag {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+}
+
+.dropdown-item .cap-tag.cap-context {
+    width: auto;
+    padding: 0 5px;
+    font-size: 9px;
+}
+
+.dropdown-item .cap-icon {
+    width: 11px;
+    height: 11px;
 }
 
 .check-icon {

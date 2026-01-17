@@ -28,7 +28,7 @@
         <div class="config-form">
             <!-- Provider Selection -->
             <div class="form-item">
-                <label class="item-label">选择服务商 <span class="sub-label">Model Provider</span></label>
+                <label class="item-label">选择服务商 </label>
                 <div class="control-wrapper provider-wrapper">
                     <ProviderDropdown :modelValue="provider" @update:modelValue="$emit('update:provider', $event)" />
                 </div>
@@ -36,7 +36,7 @@
 
             <!-- API Key -->
             <div class="form-item">
-                <label class="item-label">API 密钥 <span class="sub-label">Secret Key</span></label>
+                <label class="item-label">API 密钥</label>
                 <div class="input-wrapper">
                     <span class="input-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -98,7 +98,7 @@ watch(() => props.provider, (newProvider) => {
     if (newProvider && newProvider !== 'custom' && PROVIDER_BASE_URLS[newProvider] !== undefined) {
         emit('update:baseURL', PROVIDER_BASE_URLS[newProvider])
     }
-}, { immediate: true })  // immediate: true 确保首次渲染时也会执行
+}, { immediate: true })
 
 </script>
 

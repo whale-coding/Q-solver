@@ -29,8 +29,8 @@
                         :class="{ selected: modelValue === provider.value }"
                         @click.stop="selectProvider(provider.value)">
                         <div class="provider-logo">
-                            <div v-if="provider.logo && provider.logo.trim().startsWith('<svg')" v-html="provider.logo"></div>
-                            <img v-else-if="provider.logo" :src="provider.logo" alt="logo" />
+                            <div v-if="getLogo(provider.value) && getLogo(provider.value).trim().startsWith('<svg')" v-html="getLogo(provider.value)"></div>
+                            <img v-else-if="getLogo(provider.value)" :src="getLogo(provider.value)" alt="logo" />
                         </div>
                         <div class="model-info">
                             <span class="model-name">{{ provider.label }}</span>
@@ -45,7 +45,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { PROVIDER_LOGOS } from '../utils/modelCapabilities'
+import { getDefaultLogoSvg, PROVIDERS } from '../utils/modelCapabilities'
 
 const props = defineProps({
     modelValue: {
@@ -63,14 +63,27 @@ const emit = defineEmits(['update:modelValue'])
 const isOpen = ref(false)
 const selectRef = ref(null)
 
-// Define providers using imported logos (single source of truth)
+// Provider 列表，logo 动态获取
 const providers = [
-    { value: 'google', label: 'Google Gemini', logo: PROVIDER_LOGOS.google },
-    { value: 'openai', label: 'OpenAI', logo: PROVIDER_LOGOS.openai },
-    { value: 'anthropic', label: 'Anthropic (Claude)', logo: PROVIDER_LOGOS.anthropic },
-    { value: 'qwen', label: 'Qwen (阿里云)', logo: PROVIDER_LOGOS.alibaba },
-    { value: 'custom', label: '自定义 (Custom)', logo: PROVIDER_LOGOS.custom }
+    { value: 'google', label: 'Google Gemini' },
+    { value: 'openai', label: 'OpenAI' },
+    { value: 'anthropic', label: 'Anthropic' },
+    { value: 'qwen', label: 'Qwen (阿里云)' },
+    { value: 'moonshot', label: 'Moonshot' },
+    { value: 'openrouter', label: 'OpenRouter' },
+    { value: 'custom', label: '自定义' }
 ]
+
+// 使用映射表获取 logo
+const PROVIDER_LOGO_MAP = {
+    'google': '/icons/gemini-color.svg',
+    'openai': '/icons/openai.svg',
+    'anthropic': '/icons/anthropic.svg',
+    'qwen': '/icons/qwen-color.svg',
+    'moonshot': '/icons/moonshot.svg',
+    'openrouter': '/icons/openrouter.svg',
+    'custom': null  // null 表示使用默认 SVG
+}
 
 function toggle() {
     if (props.disabled) return
@@ -83,13 +96,13 @@ function selectProvider(value) {
 }
 
 function getLogo(value) {
-    // If value not in our list, try to find in PROVIDER_LOGOS, else default
-    return PROVIDER_LOGOS[value] || PROVIDER_LOGOS.default
+    const logo = PROVIDER_LOGO_MAP[value]
+    return logo === null || logo === undefined ? getDefaultLogoSvg() : logo
 }
 
 function getName(value) {
     const p = providers.find(p => p.value === value)
-    return p ? p.label : value
+    return p ? p.label : (PROVIDERS[value]?.name || value)
 }
 
 // 点击外部关闭

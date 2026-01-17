@@ -33,12 +33,21 @@
               <div class="model-actions">
                 <button class="btn-icon" @click="$emit('refresh-models')"
                   :disabled="isLoadingModels || !tempSettings.apiKey" title="刷新模型列表">
-                  <span :class="{ spin: isLoadingModels }">🔄</span>
+                  <svg class="action-icon" :class="{ spin: isLoadingModels }" viewBox="0 0 16 16" fill="none">
+                    <path d="M14 8a6 6 0 01-10.24 4.24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M2 8a6 6 0 0110.24-4.24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M14 3v5h-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 13V8h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
                 </button>
                 <button class="btn-icon" @click="$emit('test-connection')"
                   :disabled="isTestingConnection || !tempSettings.model" title="测试模型连通性">
-                  <span :class="{ spin: isTestingConnection }">{{ isTestingConnection ? '⏳' : '▶️'
-                  }}</span>
+                  <svg v-if="isTestingConnection" class="action-icon spin" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" stroke-dasharray="28 10" stroke-linecap="round"/>
+                  </svg>
+                  <svg v-else class="action-icon" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 3l9 5-9 5V3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                  </svg>
                 </button>
               </div>
             </div>
