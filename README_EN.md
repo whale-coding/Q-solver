@@ -50,25 +50,30 @@
 
 ## 🌟 Core Highlights
 
-<div align="center">
-  <h3>🖼️ Instant Screen Solving</h3>
-  <p>
-    Capture any part of your screen and get an instant AI analysis with a single hotkey.<br>
-    <b>📸 Smart Recognition</b>: Accurately recognizes text, math formulas, and code.<br>
-    <b>🧠 Deep Thinking</b>: Powered by extensive reasoning models like o1 and Claude 3.5.<br>
-    <b>⚡️ Zero Distraction</b>: Floating ghost window designed not to interrupt your flow.
-  </p>
-
-  <br>
-
-  <h3>🎙️ Immersive Voice Chat</h3>
-  <p>
-    Integrated with Google Gemini Live API for a seamless real-time conversation experience.<br>
-    <b>🗣️ Natural Interaction</b>: Millisecond latency, feels just like a human call.<br>
-    <b>🗺️ Auto Mind Map</b>: Visualizes your conversation structure automatically.<br>
-    <b>📝 Smart Notes</b>: Auto-transcribes and summarizes key points for you to export.
-  </p>
 </div>
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🖼️ Instant Screen Solving
+Capture any part of your screen and get an instant AI analysis with a single hotkey.
+- **📸 Smart Recognition**: Accurately recognizes text, math formulas, and code.
+- **🧠 Deep Thinking**: Powered by extensive reasoning models like o1 and Claude 3.5.
+- **⚡️ Zero Distraction**: Floating ghost window designed not to interrupt your flow.
+
+</td>
+<td width="50%" valign="top">
+
+### 🎙️ Immersive Voice Chat
+Integrated with Google Gemini Live API for a seamless real-time conversation experience.
+- **🗣️ Natural Interaction**: Millisecond latency, feels just like a human call.
+- **🗺️ Auto Mind Map**: Visualizes your conversation structure automatically.
+- **📝 Smart Notes**: Auto-transcribes and summarizes key points for you to export.
+
+</td>
+</tr>
+</table>
 
 <br>
 
@@ -108,15 +113,11 @@ Designed for privacy and multitasking, offering a "Ghost Window" experience.
 
 ## 📸 Interface Showcase
 
-<br>
-
-<div style="display: flex; justify-content: center; gap: 10px;">
-  <img src="assets/img1.png" width="32%" style="border-radius: 8px;"/>
-  <img src="assets/img6.png" width="32%" style="border-radius: 8px;"/>
-  <img src="assets/img7.png" width="32%" style="border-radius: 8px;"/>
 </div>
 
-</div>
+| | | |
+|:---:|:---:|:---:|
+| <img src="assets/img1.png" width="100%" style="border-radius: 8px;"/> | <img src="assets/img6.png" width="100%" style="border-radius: 8px;"/> | <img src="assets/img7.png" width="100%" style="border-radius: 8px;"/> |
 
 <br>
 <br>
