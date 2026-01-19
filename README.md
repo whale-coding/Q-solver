@@ -50,30 +50,25 @@
 
 ## 🌟 核心亮点
 
+<div align="center">
+  <h3>🖼️ 极速截图求解</h3>
+  <p>
+    只需一个快捷键，即刻捕获屏幕内容并进行 AI 分析。<br>
+    <b>📸 智能识别</b>：精准识别文字、公式、代码。<br>
+    <b>🧠 深度思考</b>：支持 o1, Claude 3.5 等强推理模型。<br>
+    <b>⚡️ 零干扰</b>：悬浮窗设计，不打断当前工作流。
+  </p>
+
+  <br>
+
+  <h3>🎙️ 沉浸式语音交互</h3>
+  <p>
+    集成了 Google Gemini Live API，体验丝滑的实时对话。<br>
+    <b>🗣️ 双向通话</b>：毫秒级响应，如同真人交谈。<br>
+    <b>🗺️ 思维导图</b>：对话内容自动整理为可视化导图。<br>
+    <b>📝 智能笔记</b>：自动转录并总结重点，支持导出。
+  </p>
 </div>
-
-<table>
-<tr>
-<td width="50%" valign="top">
-
-### 🖼️ 极速截图求解
-只需一个快捷键，即刻捕获屏幕内容并进行 AI 分析。
-- **📸 智能识别**：精准识别文字、公式、代码。
-- **🧠 深度思考**：支持 o1, Claude 3.5 等强推理模型。
-- **⚡️ 零干扰**：悬浮窗设计，不打断当前工作流。
-
-</td>
-<td width="50%" valign="top">
-
-### 🎙️ 沉浸式语音交互
-集成了 Google Gemini Live API，体验丝滑的实时对话。
-- **🗣️ 双向通话**：毫秒级响应，如同真人交谈。
-- **🗺️ 思维导图**：对话内容自动整理为可视化导图。
-- **📝 智能笔记**：自动转录并总结重点，支持导出。
-
-</td>
-</tr>
-</table>
 
 <br>
 
@@ -105,8 +100,6 @@
 - **Live API**: 体验 Gemini 2.0 毫秒级实时语音通话。
 - **自定义模型**: 兼容所有 OpenAI 格式的 API 接口。
 
----
-
 
 
 <br>
@@ -115,11 +108,15 @@
 
 ## 📸 界面展示
 
+<br>
+
+<div style="display: flex; justify-content: center; gap: 10px;">
+  <img src="assets/img1.png" width="32%" style="border-radius: 8px;"/>
+  <img src="assets/img6.png" width="32%" style="border-radius: 8px;"/>
+  <img src="assets/img7.png" width="32%" style="border-radius: 8px;"/>
 </div>
 
-| | | |
-|:---:|:---:|:---:|
-| <img src="assets/img1.png" width="100%" style="border-radius: 8px;"/> | <img src="assets/img6.png" width="100%" style="border-radius: 8px;"/> | <img src="assets/img7.png" width="100%" style="border-radius: 8px;"/> |
+</div>
 
 <br>
 <br>
