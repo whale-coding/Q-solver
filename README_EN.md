@@ -1,69 +1,75 @@
 <div align="center">
-  <img src="assets/banner.jpg" alt="Q-Solver Banner" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);">
+  <img src="assets/banner.jpg" alt="Q-Solver Banner" width="100%" style="border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+
+  <br>
 
   <h1>🧠 Q-Solver</h1>
   
-  <h3>Real-time AI Assistant with Screen Analysis & Voice Intelligence</h3>
+  <h3>AI-Powered Real-Time Desktop Assistant · Screen Analysis · Voice Chat</h3>
   
-  <p><i>🎯 Screenshot → Think → Answer — Your invisible AI co-pilot</i></p>
+  <p><i>🎯 Snapshot → Think → Solve. Your invisible AI Co-pilot.</i></p>
 
   <p>
-    <a href="https://github.com/jym66/Q-solver/stargazers"><img src="https://img.shields.io/github/stars/jym66/Q-solver?color=yellow&style=for-the-badge" alt="Stars"></a>
-    <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go">
-    <img src="https://img.shields.io/badge/Vue-3.x-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white" alt="Vue">
-    <img src="https://img.shields.io/badge/Wails-v2-E30613?style=for-the-badge&logo=wails&logoColor=white" alt="Wails">
+    <a href="https://github.com/jym66/Q-solver/stargazers"><img src="https://img.shields.io/github/stars/jym66/Q-solver?color=ffcb6b&style=for-the-badge&labelColor=30363d" alt="Stars"></a>
+    <a href="https://github.com/jym66/Q-solver/releases"><img src="https://img.shields.io/github/v/release/jym66/Q-solver?color=89d185&style=for-the-badge&labelColor=30363d" alt="Release"></a>
+    <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?style=for-the-badge&logo=go&logoColor=white&labelColor=30363d" alt="Go">
+    <img src="https://img.shields.io/badge/Vue-3.x-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white&labelColor=30363d" alt="Vue">
+    <img src="https://img.shields.io/badge/Wails-v2-E30613?style=for-the-badge&logo=wails&logoColor=white&labelColor=30363d" alt="Wails">
   </p>
   
   <p>
-    <img src="https://img.shields.io/badge/Platform-Windows%20|%20macOS-0078D6?logo=windows&logoColor=white" alt="Platform">
+    <img src="https://img.shields.io/badge/macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS">
+    <img src="https://img.shields.io/badge/Windows-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Windows">
   </p>
+
+  <br>
 
   <p>
     <a href="#-features">Features</a> •
-    <a href="#-quick-start">Quick Start</a> •
+    <a href="#-quick-start">Install</a> •
     <a href="#-demo">Demo</a> •
     <a href="#-shortcuts">Shortcuts</a> •
-    <a href="#-configuration">Configuration</a> •
-    <a href="README.md">中文</a>
+    <a href="README.md">中文文档</a>
   </p>
   
   <br>
   
-  <img src="assets/demo.gif" alt="Demo" width="90%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.3);">
+  <img src="assets/demo.gif" alt="Demo" width="92%" style="border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1);">
 
 </div>
 
-> [!WARNING]
-> **Development Stage Notice**: This project is currently in **early development stage**. Features may be unstable and bugs may occur. If you encounter any issues, please submit an Issue!
+<br>
+<br>
+
+> [!CAUTION]
+> **🚧 Development Status**: This project is currently in **Pre-Alpha**. Features may change significantly. Proceed with caution.
 
 <br>
 
 <div align="center">
 
-## 🔥 Why Q-Solver?
+## 🌟 Why Q-Solver?
 
 </div>
 
 <table>
 <tr>
-<td width="50%">
+<td width="50%" valign="top">
 
-### 🖼️ **Screenshot to Answer**
-One hotkey captures your screen and gets instant AI analysis. Perfect for:
-- 📝 Complex problem solving
-- 💻 Code review & debugging  
-- 📊 Data analysis
-- 🎓 Learning assistance
+### 🖼️ Instant Screen Solving
+Capture any part of your screen and get an instant AI analysis with a single hotkey.
+- **📸 Smart Recognition**: Accurately recognizes text, math formulas, and code.
+- **🧠 Deep Thinking**: Powered by extensive reasoning models like o1 and Claude 3.5.
+- **⚡️ Zero Distraction**: Floating ghost window designed not to interrupt your flow.
 
 </td>
-<td width="50%">
+<td width="50%" valign="top">
 
-### 🎙️ **Real-time Voice AI**
-Live audio capture with instant AI responses:
-- 🗣️ Real-time speech transcription
-- 🤖 Instant AI answer suggestions
-- 🗺️ Auto-generated mind maps
-- ⚡ Ultra-low latency interaction
+### 🎙️ Immersive Voice Chat
+Integrated with Google Gemini Live API for a seamless real-time conversation experience.
+- **🗣️ Natural Interaction**: Millisecond latency, feels just like a human call.
+- **🗺️ Auto Mind Map**: Visualizes your conversation structure automatically.
+- **📝 Smart Notes**: Auto-transcribes and summarizes key points for you to export.
 
 </td>
 </tr>
@@ -73,117 +79,85 @@ Live audio capture with instant AI responses:
 
 <div align="center">
 
-## ✨ Features
+## ✨ Core Features
 
 </div>
 
-### 🛡️ Stealth Mode — "Ghost Window"
+### 🛡️ Stealth Mode
 
-<div align="center">
+Designed for privacy and multitasking, offering a "Ghost Window" experience.
 
 | Feature | Description |
-|:---:|:---|
-| 🚫 **Invisible to Recording** | Most screenshot/screen recording software cannot capture this window |
-| 👆 **Click-through** | Can enable click-through to interact with apps behind the window |
-| 📌 **Always on Top** | Can be set to float above other windows |
-| 🎯 **No Focus Stealing** | Tries to avoid interrupting your current work |
-
-</div>
-
-> ⚠️ These features may behave differently depending on your system/software environment. **Please test thoroughly before actual use.**
+|:---|:---|
+| **🚫 Recording Proof** | Invisible to most screen recording/sharing software (Best on macOS 14+). |
+| **👻 Click-Through** | Enable to interact with content behind the window seamlessly. |
+| **📌 Always on Top** | Floats above all other windows for quick reference. |
+| **🔕 Focus Guard** | Intelligently manages window focus to avoid stealing keystrokes. |
 
 ---
 
-### 🎙️ Gemini Live API — Real-time Voice Interaction
+### 🧠 Model Ecosystem
 
-> 💡 **Use Case**: Capture the other party's voice in real-time, AI generates answer suggestions simultaneously
+Flexible model switching to suit your specific needs.
 
-<div align="center">
-
-| Feature | Description |
-|:---:|:---|
-| 🗣️ **Voice Transcription** | Real-time system audio capture and transcription |
-| 🤖 **Instant Answers** | AI generates answer suggestions based on transcribed content |
-| 🗺️ **Mind Map** | Automatically organize conversations into visual mind maps |
-| 📤 **Export Notes** | One-click export to Markdown format |
-
-</div>
+| Model Series | Best For | Live API |
+|:---|:---|:---:|
+| **Google Gemini 2.0** | ⚡️ Speed & Real-time Voice (Live API) | ✅ |
+| **OpenAI GPT-4o / o1** | 🎓 Complex Logic, Math, & Coding | ❌ |
+| **Claude 3.5 Sonnet** | 📝 Long Context & Code Review | ❌ |
+| **Custom OpenAI** | 🛠️ OneAPI / Local LLMs | ❌ |
 
 ---
 
-### 🔌 Multi-Model Support — Choose Your AI
+### 🎨 Context & Personalization
 
-<div align="center">
-
-| Provider | Example Models | Highlights |
-|:---:|:---|:---|
-| **OpenAI** | GPT-4o, o1-preview | Strong general capabilities |
-| **Gemini** | gemini-2.0-flash-exp | Supports Live API real-time voice |
-| **Claude** | Claude 3.5 Sonnet | Excellent long-text understanding |
-| **Custom** | Any OpenAI-compatible API | Supports OneAPI and similar services |
-
-</div>
-
----
-
-### 📄 Context Enhancement — Personalized Answers
-
-<div align="center">
-
-- **📑 Resume Import**: PDF / Markdown format, AI gives targeted answers based on your background
-- **🧠 Multi-turn Memory**: Maintains conversation context, no need to repeat background info
-- **✨ Smart Parsing**: One-click parse PDF resume into structured Markdown
-
-</div>
+- **📄 Resume/Context Injection**: Upload your PDF Resume. The AI will tailor answers (e.g., mock interviews, code explanations) based on your background.
+- **💾 Long-term Memory**: Maintains conversation context so you don't have to repeat yourself.
 
 <br>
 
 <div align="center">
 
-## 📸 Demo
+## 📸 Interface Showcase
 
+</div>
 
-| Screenshot Analysis | Real-time Voice | Mind Map |
+| | | |
 |:---:|:---:|:---:|
-| <img src="assets/img1.png" width="100%"/> | <img src="assets/img6.png" width="100%"/> | <img src="assets/img7.png" width="100%"/> |
+| <img src="assets/img1.png" width="100%" style="border-radius: 8px;"/> | <img src="assets/img6.png" width="100%" style="border-radius: 8px;"/> | <img src="assets/img7.png" width="100%" style="border-radius: 8px;"/> |
 
-<details>
-<summary>📷 More Screenshots</summary>
-
-| | |
-|:---:|:---:|
-| <img src="assets/img2.png" width="100%"/> | <img src="assets/img3.png" width="100%"/> |
-| <img src="assets/img4.png" width="100%"/> | <img src="assets/img5.png" width="100%"/> |
-
-</details>
-
+<br>
 <br>
 
 ## 🚀 Quick Start
 
-### Option 1: Download Release (Recommended)
+### 📥 Option 1: Download App (Recommended)
 
-<a href="https://github.com/jym66/Q-solver/releases">
-  <img src="https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge&logo=github" alt="Download">
-</a>
+Get the latest installer for your OS from the [Releases Page](https://github.com/jym66/Q-solver/releases).
 
-> **macOS users**: You may need to add execute permission after downloading:
+> [!NOTE]
+> **macOS Notice**: If you see a "Damage" or "Unidentified Developer" warning, run:
 > ```bash
-> chmod +x Q-Solver.app/Contents/MacOS/Q-Solver
+> xattr -cr /Applications/Q-Solver.app
+> chmod +x /Applications/Q-Solver.app/Contents/MacOS/Q-Solver
 > ```
 
-### Option 2: Build from Source
+### 🛠️ Option 2: Build from Source
+
+**Prerequisites**: Go 1.25+, Node.js 22+, Wails CLI
 
 ```bash
-# Prerequisites: Go 1.25+, Node.js 22+, Wails CLI
+# 1. Install Wails
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
-# Clone & Run
+# 2. Clone repo
 git clone https://github.com/jym66/Q-solver.git
 cd Q-Solver
+
+# 3. Dev mode (Hot Reload)
 wails dev
 
-# Build production
+# 4. Build Production
 wails build -ldflags "-s -w" -tags prod
 ```
 
@@ -191,91 +165,55 @@ wails build -ldflags "-s -w" -tags prod
 
 ## ⌨️ Shortcuts
 
-<table>
-<tr>
-<th>Action</th>
-<th>Windows</th>
-<th>macOS</th>
-</tr>
-<tr>
-<td><b>📸 Screenshot & Solve</b></td>
-<td><code>F8</code></td>
-<td><code>⌘1</code></td>
-</tr>
-<tr>
-<td>👁️ Show/Hide</td>
-<td><code>F9</code></td>
-<td><code>⌘2</code></td>
-</tr>
-<tr>
-<td>🖱️ Click-through</td>
-<td><code>F10</code></td>
-<td><code>⌘3</code></td>
-</tr>
-<tr>
-<td>↕️ Move Window</td>
-<td><code>Alt + Arrow</code></td>
-<td><code>⌘⌥ + Arrow</code></td>
-</tr>
-<tr>
-<td>📜 Scroll</td>
-<td><code>Alt + PgUp/PgDn</code></td>
-<td><code>⌘⌥⇧ + ↑/↓</code></td>
-</tr>
-</table>
+> 💡 **Tip**: Shortcuts are currently fixed on macOS but will be customizable on Windows soon.
 
-> **Note**: Windows supports custom hotkeys. macOS uses fixed shortcuts.
+| Action | Windows | macOS |
+|:---|:---:|:---:|
+| **Snapshot & Solve** 📸 | `F8` | `⌘ + 1` |
+| **Toggle Visibility** 👁️ | `F9` | `⌘ + 2` |
+| **Toggle Click-Through** 👻 | `F10` | `⌘ + 3` |
+| **Nudge Window** ↕️ | `Alt + Arrows` | `⌘⌥ + Arrows` |
+| **Fast Scroll** 📜 | `Alt + PgUp/Dn` | `⌘⌥⇧ + ↑/↓` |
 
 <br>
 
 ## ⚙️ Configuration
 
-1. Click **Settings** icon (top-right corner)
-2. Choose your **Provider**: OpenAI / Gemini / Claude / Custom
-3. Enter your **API Key**
-4. Select a **Model**
-5. (Optional) Import **Resume/CV** for personalized answers
+1. Click the **Settings** icon (top-right).
+2. Select text **Provider** (e.g., Gemini, OpenAI).
+3. Paste your **API Key**.
+4. (Optional) Enable **Live API** for voice features.
 
-### Supported Providers
+### 🍎 macOS Setup
 
-| Provider | Models | Live API |
-|----------|--------|----------|
-| OpenAI | GPT-4o, o1, etc. | ❌ |
-| Gemini | gemini-2.0-flash-exp | ✅ |
-| Claude | Claude 3.5+ | ❌ |
-| Custom | Any OpenAI-compatible | ❌ |
-
-<br>
-
-## 🍎 macOS Setup
+macOS requires specific permissions for full functionality:
 
 <details>
-<summary><b>📸 Screenshot Permission</b></summary>
+<summary><b>🔐 Screen Recording (Required)</b></summary>
 
-1. Go to **Settings** → **Screenshot** tab
-2. Click **Grant Screenshot Permission**
-3. Allow in System Preferences
-4. Click **Refresh Permission Status**
+For screen analysis:
+1. You should see a system prompt on first launch.
+2. If not, go to **System Settings** -> **Privacy & Security** -> **Screen Recording**.
+3. Toggle **Q-Solver** ON.
+4. **Restart** the app.
 
 </details>
 
 <details>
-<summary><b>🎙️ System Audio Capture (for Live API)</b></summary>
+<summary><b>🎙️ System Audio Capture (For Live API)</b></summary>
 
-macOS requires a virtual audio driver for system audio capture:
+To let the AI hear computer audio (e.g., meetings), you need a virtual audio driver:
 
-```bash
-# Install BlackHole
-brew install blackhole-2ch
-```
+1. Install [BlackHole](https://github.com/ExistentialAudio/BlackHole):
+   ```bash
+   brew install blackhole-2ch
+   ```
+2. Open **Audio MIDI Setup**.
+3. Create a **Multi-Output Device**. Check both your **Speakers** and **BlackHole 2ch**.
+4. Set this Multi-Output Device as your system output.
+5. In Q-Solver Settings, ensure Audio Input includes BlackHole.
 
-Then configure in **Audio MIDI Setup**:
-1. Create **Multi-Output Device**
-2. Add **BlackHole 2ch** + your speakers
-3. Set as system output
-4. Set BlackHole input volume to **1.0**
-
-<img src="assets/img5.png" width="500"/>
+<img src="assets/img5.png" width="90%" style="border-radius: 8px;"/>
 
 </details>
 
@@ -283,25 +221,14 @@ Then configure in **Audio MIDI Setup**:
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Backend | Go 1.25+, Wails v2 |
-| Frontend | Vue 3, Vue Flow |
-| AI | OpenAI SDK, Google GenAI, Anthropic SDK |
-| Audio | malgo (miniaudio), WASAPI/BlackHole |
-| UI | Native window APIs, CGO |
+- **Core**: [Go](https://go.dev/) (Logic) + [Wails](https://wails.io/) (Binding)
+- **UI**: [Vue 3](https://vuejs.org/) + [Vue Flow](https://vueflow.dev/) (Mind Map)
+- **AI**: Gemini Protocol, OpenAI SDK
+- **Audio**: Miniaudio (via malgo), BlackHole
 
 <br>
 
-## ⚠️ Disclaimer
-
-> **This project is for technical research and personal learning purposes only. Do not use it for any illegal or unethical purposes.**
-> 
-> The user assumes all responsibility for any consequences arising from the use of this software. The developer is not liable for any damages.
-
-<br>
-
-## ⭐ Star History
+## 📈 Star History
 
 <div align="center">
   <a href="https://star-history.com/#jym66/Q-solver&Date">
@@ -315,21 +242,15 @@ Then configure in **Audio MIDI Setup**:
 
 <br>
 
-## 📜 License
+## 📄 License
 
-<p>
-This project is licensed under <b>CC BY-NC 4.0</b> — for personal and educational use only.
-</p>
-
-<br>
+Distributed under the **CC BY-NC 4.0** License. Intended for **personal, non-commercial use only**.
 
 ---
 
 <div align="center">
+  <p>Made with ❤️ by <a href="https://github.com/jym66">jym66</a></p>
   <p>
-    <b>If you find Q-Solver useful, please give it a ⭐ Star!</b>
-  </p>
-  <p>
-    Made with ❤️ by <a href="https://github.com/jym66">jym66</a>
+    If you enjoy using Q-Solver, please leave a <b>⭐ Star</b>!
   </p>
 </div>
