@@ -69,7 +69,7 @@ Capture any part of your screen and get an instant AI analysis with a single hot
 Integrated with Google Gemini Live API for a seamless real-time conversation experience.
 - **🗣️ Natural Interaction**: Millisecond latency, feels just like a human call.
 - **🗺️ Auto Mind Map**: Visualizes your conversation structure automatically.
-- **📝 Smart Notes**: Auto-transcribes and summarizes key points for you to export.
+- **📝 Smart Notes**: Auto-transcribes and summarizes key points.
 
 </td>
 </tr>
