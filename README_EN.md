@@ -1,214 +1,310 @@
 <div align="center">
   <img src="assets/banner.jpg" alt="Q-Solver Banner" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);">
 
-  <h1 style="font-size: 3rem; margin: 20px 0;">Q-Solver</h1>
-  <p style="font-size: 1.2rem; color: #666;">📝 Screenshot, Think, Solve — Your Distraction-Free AI Assistant</p>
+  <h1>🧠 Q-Solver</h1>
+  
+  <h3>Real-time AI Assistant with Screen Analysis & Voice Intelligence</h3>
+  
+  <p><i>🎯 Screenshot → Think → Answer — Your invisible AI co-pilot</i></p>
 
   <p>
-    <a href="https://golang.org"><img src="https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white" alt="Go"></a>
-    <a href="https://vuejs.org"><img src="https://img.shields.io/badge/Vue-3.x-4FC08D?logo=vue.js&logoColor=white" alt="Vue"></a>
-    <a href="https://wails.io"><img src="https://img.shields.io/badge/Wails-v2-E30613?logo=wails&logoColor=white" alt="Wails"></a>
+    <a href="https://github.com/jym66/Q-Solver/releases"><img src="https://img.shields.io/github/v/release/jym66/Q-Solver?color=blueviolet&label=Latest&style=for-the-badge" alt="Release"></a>
+    <a href="https://github.com/jym66/Q-Solver/stargazers"><img src="https://img.shields.io/github/stars/jym66/Q-Solver?color=yellow&style=for-the-badge" alt="Stars"></a>
+    <a href="https://github.com/jym66/Q-Solver/releases"><img src="https://img.shields.io/github/downloads/jym66/Q-Solver/total?color=green&style=for-the-badge" alt="Downloads"></a>
+  </p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white" alt="Go">
+    <img src="https://img.shields.io/badge/Vue-3.x-4FC08D?logo=vue.js&logoColor=white" alt="Vue">
+    <img src="https://img.shields.io/badge/Wails-v2-E30613?logo=wails&logoColor=white" alt="Wails">
     <img src="https://img.shields.io/badge/Platform-Windows%20|%20macOS-0078D6?logo=windows&logoColor=white" alt="Platform">
-    <img src="https://img.shields.io/badge/License-CC_BY--NC_4.0-lightgrey" alt="License">
   </p>
 
   <p>
-    <a href="#✨-Features">Features</a> •
-    <a href="#🚀-Quick-Start">Install</a> •
-    <a href="#⚙️-Configuration">Config</a> •
-    <a href="#⌨️-Shortcuts">Shortcuts</a> •
-    <a href="README.md">中文文档</a>
+    <a href="#-features">Features</a> •
+    <a href="#-quick-start">Quick Start</a> •
+    <a href="#-demo">Demo</a> •
+    <a href="#-shortcuts">Shortcuts</a> •
+    <a href="#-configuration">Configuration</a> •
+    <a href="README.md">中文</a>
   </p>
+  
+  <br>
+  
+  <img src="assets/demo.gif" alt="Demo" width="90%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.3);">
+
 </div>
 
 > [!WARNING]
-> **Development Phase Note**: This project is currently in early active development (Alpha/Beta) and may contain minor bugs or unstable features. If you encounter any issues, please submit an Issue, and we will fix it ASAP!
+> **Development Stage Notice**: This project is currently in **early development stage**. Features may be unstable and bugs may occur. If you encounter any issues, please submit an Issue!
 
 <br>
 
-## 📖 Introduction
+## 🔥 Why Q-Solver?
 
-**Q-Solver** is a desktop AI assistant designed for **high-pressure, high-focus scenarios**. It deeply integrates top-tier LLMs like **OpenAI**, **Google Gemini**, and **Anthropic Claude**. With minimal screenshot interactions, it provides real-time code analysis, Q&A, and content creation assistance.
+<table>
+<tr>
+<td width="50%">
 
-When you need to **stay focused while getting instant help**, Q-Solver is your best choice—floating window that doesn't break your flow, stealth mode that leaves no trace, and context awareness that truly understands your needs.
+### 🖼️ **Screenshot to Answer**
+One hotkey captures your screen and gets instant AI analysis. Perfect for:
+- 📝 Complex problem solving
+- 💻 Code review & debugging  
+- 📊 Data analysis
+- 🎓 Learning assistance
 
----
+</td>
+<td width="50%">
+
+### 🎙️ **Real-time Voice AI**
+Live audio capture with instant AI responses:
+- 🗣️ Real-time speech transcription
+- 🤖 Instant AI answer suggestions
+- 🗺️ Auto-generated mind maps
+- ⚡ Ultra-low latency interaction
+
+</td>
+</tr>
+</table>
+
+<br>
 
 ## ✨ Features
 
-### 🛡️ Stealth Mode
-Designed for scenarios where you **need to focus without interruption**:
-- **Borderless / Semi-Transparent**: Always on top, never blocking your workspace
-- **Anti-Focus Stealing**: Window stays visible when switching apps, answers always accessible
-- **Stealth / Anti-Detection**: Special window attributes to evade screen recording and screenshot tools
-- **Click-Through**: Click through the window to interact with apps behind it, zero interference
+### 🛡️ Stealth Mode — "Ghost Window"
 
-### 🔌 Comprehensive Model Support
-- **Native SDK Integration**: Built-in native SDKs for Google Gemini, Anthropic Claude, and OpenAI (not just HTTP forwarding) to ensure optimal streaming response and stability.
-- **Custom Access**: Supports aggregation services like OneAPI for flexible network adaptation.
+| Feature | Description |
+|:---:|:---|
+| 🚫 **Invisible to Recording** | Most screenshot/screen recording software cannot capture this window |
+| 👆 **Click-through** | Can enable click-through to interact with apps behind the window |
+| 📌 **Always on Top** | Can be set to float above other windows |
+| 🎯 **No Focus Stealing** | Tries to avoid interrupting your current work |
 
-### 📄 Context Awareness
-- **Background Import**: Import PDF/Markdown documents, and the AI generates personalized answers based on your background.
-- **Smart Memory**: Supports multi-turn conversation context, automatically clearing when a new topic starts.
-
-### 🎙️ Gemini Live API (Experimental)
-- **Real-time Voice Conversation**: Supports bidirectional real-time voice calls with Gemini models, providing an ultra-low latency interaction experience.
-- **Voice Transcription Mode**: Captures and transcribes the other party's voice in real-time, with AI providing instant answer suggestions to help you handle any conversation scenario.
-- **🗺️ Question Mind Map**: Automatically organizes conversation content into a visual mind map, clearly displaying question context and knowledge point relationships. Supports interactive features like node click for details and path highlighting.
-- **Note**: This feature is currently in an **experimental stage**. Connection instability may occur due to network conditions.
-- **Supported Models**: Please select `gemini-2.0-flash-exp`.
-
-### ⚡ Extreme Performance
-- **Go + Wails**: Modern tech stack with native-level performance and extremely low memory footprint.
-- **Vue 3 Frontend**: Responsive, modern UI that is smooth and fluid.
-- **Global Shortcuts**: Wake up with `F8` in a split second without switching windows.
+> ⚠️ These features may behave differently depending on your system/software environment. **Please test thoroughly before actual use.**
 
 ---
 
-## 🖼️ Preview
+### 🎙️ Gemini Live API — Real-time Voice Interaction
 
-<div align="center">
-  <img src="assets/demo.gif" style="border-radius: 8px; width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
-  <p><i>👆 Live Demo: Screenshot -> Thinking -> Answer</i></p>
-</div>
+> 💡 **Use Case**: Capture the other party's voice in real-time, AI generates answer suggestions simultaneously
 
-| | |
-|:---:|:---:|
-| <img src="assets/img1.png" style="border-radius: 8px; width: 100%;" /> | <img src="assets/img2.png" style="border-radius: 8px; width: 100%;" /> |
-| <img src="assets/img3.png" style="border-radius: 8px; width: 100%;" /> | <img src="assets/img4.png" style="border-radius: 8px; width: 100%;" /> |
-| <img src="assets/img6.png" style="border-radius: 8px; width: 100%;" /> | <img src="assets/img7.png" style="border-radius: 8px; width: 100%;" /> |
+| Feature | Description |
+|:---:|:---|
+| 🗣️ **Voice Transcription** | Real-time system audio capture and transcription |
+| 🤖 **Instant Answers** | AI generates answer suggestions based on transcribed content |
+| 🗺️ **Mind Map** | Automatically organize conversations into visual mind maps |
+| 📤 **Export Notes** | One-click export to Markdown format |
 
 ---
 
-## 🚀 Quick Start
+### 🔌 Multi-Model Support — Choose Your AI
 
-### Method 1: Download Installer (Recommended)
-Go to the [Releases](https://github.com/jym66/Q-Solver/releases) page to download the latest Windows installer (`.exe`).
-
-### Method 2: Build from Source
-If you are a developer, you can clone the source code for secondary development:
-
-```bash
-# Prerequisites: Go 1.25+, Node.js 22+, Wails CLI
-
-# 1. Clone repository
-git clone https://github.com/jym66/Q-Solver.git
-cd Q-Solver
-
-# 2. Run in Dev Mode (Hot Reload)
-wails dev
-
-# 3. Build Production Version
-wails build -ldflags "-s -w" -tags prod
-```
+| Provider | Example Models | Highlights |
+|:---:|:---|:---|
+| **OpenAI** | GPT-4o, o1-preview | Strong general capabilities |
+| **Gemini** | gemini-2.0-flash-exp | Supports Live API real-time voice |
+| **Claude** | Claude 3.5 Sonnet | Excellent long-text understanding |
+| **Custom** | Any OpenAI-compatible API | Supports OneAPI and similar services |
 
 ---
 
-## 🍎 macOS Instructions
+### 📄 Context Enhancement — Personalized Answers
 
-> ⚠️ **Compatibility Note**: The macOS version is currently in **compatibility adaptation stage** and may have bugs or instability. Please submit an Issue if you encounter any problems!
-
-### Shortcuts
-The macOS version supports the following fixed shortcuts. **Customization is not supported yet**:
-
-| Function | Shortcut |
-|----------|----------|
-| Screenshot & Solve | `⌘1` |
-| Show/Hide | `⌘2` |
-| Click-Through | `⌘3` |
-| Move Window Up | `⌘⌥↑` |
-| Move Window Down | `⌘⌥↓` |
-| Move Window Left | `⌘⌥←` |
-| Move Window Right | `⌘⌥→` |
-| Scroll Up | `⌘⌥⇧↑` |
-| Scroll Down | `⌘⌥⇧↓` |
-
-> **Note**: Custom shortcuts are currently only available on Windows.
-
-### Screenshot Permission
-On first launch, you need to grant screenshot permission:
-1. Open **Settings** -> **Screenshot** tab
-2. Click **Grant Screenshot Permission** button
-3. Enable the app in System Preferences
-4. Return to the app and click **Refresh Permission Status**
-
-### System Audio Capture (Gemini Live API)
-macOS does not natively support recording system audio. You need to install a virtual audio driver:
-
-1. **Install BlackHole** (2-channel version recommended):
-   ```bash
-   brew install blackhole-2ch
-   ```
-
-2. **Configure Multi-Output Device**:
-   - Open **Audio MIDI Setup** (Applications > Utilities)
-   - Click the **+** button at the bottom left, select **Create Multi-Output Device**
-   - Check both **BlackHole 2ch** and your speakers/headphones
-   - Right-click the new multi-output device and select **Use This Device For Sound Output**
-
-3. **Adjust BlackHole Volume** (Important!):
-   - In **Audio MIDI Setup**, select **BlackHole 2ch** on the left panel
-   - In the **Input** tab on the right, drag the **Main** volume slider to **1.0** (far right)
-   - If the volume is not set to 1.0, the captured system audio will be very quiet
-
-   <img src="assets/img5.png" width="600" style="border-radius: 8px; margin: 10px 0;" />
-
-4. **Grant Microphone Permission**: When launching the Live API feature for the first time, please allow microphone access.
-
-> **Note**: If BlackHole is not installed, the "Interviewer Mode" in Live API will not be able to capture system audio.
-
----
-
-## ⚙️ Configuration
-
-Launch the software and click the **Settings** icon in the top right corner:
-
-1.  **Select Provider**: Supports OpenAI, Gemini, Claude, or Custom.
-2.  **API Key**: Enter the API Key for the corresponding platform.
-3.  **Model Parameters**:
-    *   **Temperature**: Control answer randomness (0.0 - 2.0).
-    *   **Thinking Budget**: Set Token budget for o1/Claude-3.5 thinking process.
-4.  **Custom Mode**:
-    *   Select `Custom` provider.
-    *   Enter API URL (e.g., OneAPI).
-    *   Supports automatic protocol switching based on model prefix (Gemini/Claude).
-
----
-
-## ⌨️ Shortcuts
-
-### Windows Shortcuts
-
-Windows version supports **customizable** shortcuts. Default configuration:
-
-| Key | Function |
-| :--- | :--- |
-| **F8** | **Screenshot & Ask** (Core Function) |
-| **F9** | Show / Hide Main Window |
-| **F10** | Toggle Mouse Click-Through |
-| **Alt + ⬆️/⬇️/⬅️/➡️** | Fine-tune Window Position |
-| **Alt + PgUp/PgDn** | Quick History Navigation |
-
-### macOS Shortcuts
-
-macOS version uses **fixed** shortcuts. Customization is not supported yet:
-
-| Key | Function |
-| :--- | :--- |
-| **⌘1** | **Screenshot & Solve** (Core Function) |
-| **⌘2** | Show / Hide Main Window |
-| **⌘3** | Toggle Mouse Click-Through |
-| **⌘⌥↑/↓/←/→** | Fine-tune Window Position |
-| **⌘⌥⇧↑/↓** | Quick History Navigation |
-
-## Support
-
-If you like this project, please give it a ⭐️ **Star**, it helps us a lot!
-
-**Disclaimer**: This project is for technical research and personal learning only. Please do not use it for any illegal purposes.
+- **📑 Resume Import**: PDF / Markdown format, AI gives targeted answers based on your background
+- **🧠 Multi-turn Memory**: Maintains conversation context, no need to repeat background info
+- **✨ Smart Parsing**: One-click parse PDF resume into structured Markdown
 
 <br>
 
+## 📸 Demo
+
+| Screenshot Analysis | Real-time Voice | Mind Map |
+|:---:|:---:|:---:|
+| <img src="assets/img1.png" width="100%"/> | <img src="assets/img6.png" width="100%"/> | <img src="assets/img7.png" width="100%"/> |
+
+<details>
+<summary>📷 More Screenshots</summary>
+
+| | |
+|:---:|:---:|
+| <img src="assets/img2.png" width="100%"/> | <img src="assets/img3.png" width="100%"/> |
+| <img src="assets/img4.png" width="100%"/> | <img src="assets/img5.png" width="100%"/> |
+
+</details>
+
+<br>
+
+## 🚀 Quick Start
+
+### Option 1: Download Release (Recommended)
+
+<a href="https://github.com/jym66/Q-Solver/releases">
+  <img src="https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge&logo=github" alt="Download">
+</a>
+
+> **macOS users**: You may need to add execute permission after downloading:
+> ```bash
+> chmod +x Q-Solver.app/Contents/MacOS/Q-Solver
+> ```
+
+### Option 2: Build from Source
+
+```bash
+# Prerequisites: Go 1.25+, Node.js 22+, Wails CLI
+go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+# Clone & Run
+git clone https://github.com/jym66/Q-Solver.git
+cd Q-Solver
+wails dev
+
+# Build production
+wails build -ldflags "-s -w" -tags prod
+```
+
+<br>
+
+## ⌨️ Shortcuts
+
+<table>
+<tr>
+<th>Action</th>
+<th>Windows</th>
+<th>macOS</th>
+</tr>
+<tr>
+<td><b>📸 Screenshot & Solve</b></td>
+<td><code>F8</code></td>
+<td><code>⌘1</code></td>
+</tr>
+<tr>
+<td>👁️ Show/Hide</td>
+<td><code>F9</code></td>
+<td><code>⌘2</code></td>
+</tr>
+<tr>
+<td>🖱️ Click-through</td>
+<td><code>F10</code></td>
+<td><code>⌘3</code></td>
+</tr>
+<tr>
+<td>↕️ Move Window</td>
+<td><code>Alt + Arrow</code></td>
+<td><code>⌘⌥ + Arrow</code></td>
+</tr>
+<tr>
+<td>📜 Scroll</td>
+<td><code>Alt + PgUp/PgDn</code></td>
+<td><code>⌘⌥⇧ + ↑/↓</code></td>
+</tr>
+</table>
+
+> **Note**: Windows supports custom hotkeys. macOS uses fixed shortcuts.
+
+<br>
+
+## ⚙️ Configuration
+
+1. Click **Settings** icon (top-right corner)
+2. Choose your **Provider**: OpenAI / Gemini / Claude / Custom
+3. Enter your **API Key**
+4. Select a **Model**
+5. (Optional) Import **Resume/CV** for personalized answers
+
+### Supported Providers
+
+| Provider | Models | Live API |
+|----------|--------|----------|
+| OpenAI | GPT-4o, o1, etc. | ❌ |
+| Gemini | gemini-2.0-flash-exp | ✅ |
+| Claude | Claude 3.5+ | ❌ |
+| Custom | Any OpenAI-compatible | ❌ |
+
+<br>
+
+## 🍎 macOS Setup
+
+<details>
+<summary><b>📸 Screenshot Permission</b></summary>
+
+1. Go to **Settings** → **Screenshot** tab
+2. Click **Grant Screenshot Permission**
+3. Allow in System Preferences
+4. Click **Refresh Permission Status**
+
+</details>
+
+<details>
+<summary><b>🎙️ System Audio Capture (for Live API)</b></summary>
+
+macOS requires a virtual audio driver for system audio capture:
+
+```bash
+# Install BlackHole
+brew install blackhole-2ch
+```
+
+Then configure in **Audio MIDI Setup**:
+1. Create **Multi-Output Device**
+2. Add **BlackHole 2ch** + your speakers
+3. Set as system output
+4. Set BlackHole input volume to **1.0**
+
+<img src="assets/img5.png" width="500"/>
+
+</details>
+
+<br>
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Backend | Go 1.25+, Wails v2 |
+| Frontend | Vue 3, Vue Flow |
+| AI | OpenAI SDK, Google GenAI, Anthropic SDK |
+| Audio | malgo (miniaudio), WASAPI/BlackHole |
+| UI | Native window APIs, CGO |
+
+<br>
+
+## ⚠️ Disclaimer
+
+> **This project is for technical research and personal learning purposes only. Do not use it for any illegal or unethical purposes.**
+> 
+> The user assumes all responsibility for any consequences arising from the use of this software. The developer is not liable for any damages.
+
+<br>
+
+## ⭐ Star History
+
 <div align="center">
-  <p>Made with ❤️ by <a href="https://github.com/jym66">jym66</a></p>
+  <a href="https://star-history.com/#jym66/Q-Solver&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=jym66/Q-Solver&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=jym66/Q-Solver&type=Date" />
+      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=jym66/Q-Solver&type=Date" />
+    </picture>
+  </a>
+</div>
+
+<br>
+
+## 📜 License
+
+<p>
+This project is licensed under <b>CC BY-NC 4.0</b> — for personal and educational use only.
+</p>
+
+<br>
+
+---
+
+<div align="center">
+  <p>
+    <b>If you find Q-Solver useful, please give it a ⭐ Star!</b>
+  </p>
+  <p>
+    Made with ❤️ by <a href="https://github.com/jym66">jym66</a>
+  </p>
 </div>
