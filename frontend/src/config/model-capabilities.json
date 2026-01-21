@@ -1,4 +1,30 @@
 {
+  "lfm-2.5-1.2b-thinking": {
+    "provider": "liquid",
+    "name": "LiquidAI: LFM2.5-1.2B-Thinking (free)",
+    "description": "LFM2.5-1.2B-Thinking is a lightweight reasoning-focused model optimized for agentic tasks, data extraction, and RAG—while still running comfortably on edge devices. It supports long context (up to 32K tokens) and is designed to provide higher-quality “thinking” responses in a small 1.2B model.",
+    "supports_image": false,
+    "context_length": 32768,
+    "inputs": [
+      "text"
+    ],
+    "outputs": [
+      "text"
+    ]
+  },
+  "lfm-2.5-1.2b-instruct": {
+    "provider": "liquid",
+    "name": "LiquidAI: LFM2.5-1.2B-Instruct (free)",
+    "description": "LFM2.5-1.2B-Instruct is a compact, high-performance instruction-tuned model built for fast on-device AI. It delivers strong chat quality in a 1.2B parameter footprint, with efficient edge inference and broad runtime support.",
+    "supports_image": false,
+    "context_length": 32768,
+    "inputs": [
+      "text"
+    ],
+    "outputs": [
+      "text"
+    ]
+  },
   "gpt-audio": {
     "provider": "openai",
     "name": "OpenAI: GPT Audio",
@@ -781,8 +807,8 @@
   },
   "lfm2-8b-a1b": {
     "provider": "liquid",
-    "name": "LiquidAI/LFM2-8B-A1B",
-    "description": "Model created via inbox interface",
+    "name": "LiquidAI: LFM2-8B-A1B",
+    "description": "LFM2-8B-A1B is an efficient on-device Mixture-of-Experts (MoE) model from Liquid AI’s LFM2 family, built for fast, high-quality inference on edge hardware. It uses 8.3B total parameters with only ~1.5B active per token, delivering strong performance while keeping compute and memory usage low—making it ideal for phones, tablets, and laptops.",
     "supports_image": false,
     "context_length": 32768,
     "inputs": [
@@ -794,7 +820,7 @@
   },
   "lfm-2.2-6b": {
     "provider": "liquid",
-    "name": "LiquidAI/LFM2-2.6B",
+    "name": "LiquidAI: LFM2-2.6B",
     "description": "LFM2 is a new generation of hybrid models developed by Liquid AI, specifically designed for edge AI and on-device deployment. It sets a new standard in terms of quality, speed, and memory efficiency.",
     "supports_image": false,
     "context_length": 32768,
@@ -1125,7 +1151,7 @@
     "name": "Qwen: Qwen3 VL 235B A22B Thinking",
     "description": "Qwen3-VL-235B-A22B Thinking is a multimodal model that unifies strong text generation with visual understanding across images and video. The Thinking model is optimized for multimodal reasoning in STEM and math. The series emphasizes robust perception (recognition of diverse real-world and synthetic categories), spatial understanding (2D/3D grounding), and long-form visual comprehension, with competitive results on public multimodal benchmarks for both perception and reasoning.\n\nBeyond analysis, Qwen3-VL supports agentic interaction and tool use: it can follow complex instructions over multi-image, multi-turn dialogues; align text to video timelines for precise temporal queries; and operate GUI elements for automation tasks. The models also enable visual coding workflows, turning sketches or mockups into code and assisting with UI debugging, while maintaining strong text-only performance comparable to the flagship Qwen3 language models. This makes Qwen3-VL suitable for production scenarios spanning document AI, multilingual OCR, software/UI assistance, spatial/embodied tasks, and research on vision-language agents.",
     "supports_image": true,
-    "context_length": 131072,
+    "context_length": 262144,
     "inputs": [
       "text",
       "image"
