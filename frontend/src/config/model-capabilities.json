@@ -1,4 +1,17 @@
 {
+  "palmyra-x5": {
+    "provider": "writer",
+    "name": "Writer: Palmyra X5",
+    "description": "Palmyra X5 is Writer's most advanced model, purpose-built for building and scaling AI agents across the enterprise. It delivers industry-leading speed and efficiency on context windows up to 1 million tokens, powered by a novel transformer architecture and hybrid attention mechanisms. This enables faster inference and expanded memory for processing large volumes of enterprise data, critical for scaling AI agents.",
+    "supports_image": false,
+    "context_length": 1040000,
+    "inputs": [
+      "text"
+    ],
+    "outputs": [
+      "text"
+    ]
+  },
   "lfm-2.5-1.2b-thinking": {
     "provider": "liquid",
     "name": "LiquidAI: LFM2.5-1.2B-Thinking (free)",
